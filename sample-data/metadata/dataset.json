@@ -1,0 +1,143 @@
+{
+  "dataset": {
+    "name": "IntelliLand Synthetic Land Record Dataset",
+    "version": "1.0.0",
+    "purpose": "Prototype testing of OCR, document understanding, information extraction, validation and GIS parcel linking",
+    "synthetic": true,
+    "status": "prototype"
+  },
+
+  "disclaimer": "All documents and reference data in this dataset are synthetic and created only for prototype development and testing. They do not represent authentic government records or real persons.",
+
+  "statistics": {
+    "total_documents": 10,
+    "ror_documents": 3,
+    "mutation_documents": 1,
+    "registration_documents": 3,
+    "handwritten_documents": 3,
+    "poor_quality_variants": 3,
+    "map_documents": 0
+  },
+
+  "documents": [
+    {
+      "id": "ROR_001",
+      "type": "ROR",
+      "title": "Synthetic Record of Rights",
+      "input_document": "documents/ror/ROR_001.pdf",
+      "ground_truth_json": "ground-truth/ror/ROR_001_GROUND_TRUTH.json",
+      "language": "Hindi-English",
+      "handwritten": false,
+      "quality": "clean",
+      "expected_validation": "match"
+    },
+
+    {
+      "id": "ROR_002",
+      "type": "ROR",
+      "title": "Synthetic Record of Rights",
+      "input_document": "documents/ror/ROR_002.pdf",
+      "ground_truth_json": "ground-truth/ror/ROR_002_GROUND_TRUTH.json",
+      "language": "Hindi",
+      "handwritten": false,
+      "quality": "medium",
+      "expected_validation": "mismatch"
+    },
+
+    {
+      "id": "ROR_001_POOR_QUALITY",
+      "type": "ROR",
+      "title": "Poor Quality Synthetic Record of Rights",
+      "input_document": "documents/ror/ROR_001_POOR_QUALITY.pdf",
+      "ground_truth_json": "ground-truth/ror/ROR_001_POOR_QUALITY_GROUND_TRUTH.json",
+      "language": "Hindi-English",
+      "handwritten": false,
+      "quality": "poor",
+      "expected_validation": "match"
+    },
+
+    {
+      "id": "MUTATION_001",
+      "type": "MUTATION",
+      "title": "Synthetic Mutation Record",
+      "input_document": "documents/mutation/MUTATION_001.pdf",
+      "ground_truth_json": "ground-truth/mutation/MUTATION_001_GROUND_TRUTH.json",
+      "language": "Hindi-English",
+      "handwritten": false,
+      "quality": "medium",
+      "expected_validation": "mismatch"
+    },
+
+    {
+      "id": "REGISTRATION_001",
+      "type": "REGISTRATION",
+      "title": "Synthetic Property Registration Record",
+      "input_document": "documents/registration/REGISTRATION_001.pdf",
+      "ground_truth_json": "ground-truth/registration/REGISTRATION_001_GROUND_TRUTH.json",
+      "language": "English",
+      "handwritten": false,
+      "quality": "clean",
+      "expected_validation": "match"
+    },
+
+    {
+      "id": "REGISTRATION_002",
+      "type": "REGISTRATION",
+      "title": "Synthetic Property Sale Record",
+      "input_document": "documents/registration/REGISTRATION_002.pdf",
+      "ground_truth_json": "ground-truth/registration/REGISTRATION_002_GROUND_TRUTH.json",
+      "language": "Hindi-English",
+      "handwritten": false,
+      "quality": "poor",
+      "expected_validation": "mismatch"
+    },
+
+    {
+      "id": "REGISTRATION_001_POOR_QUALITY",
+      "type": "REGISTRATION",
+      "title": "Poor Quality Synthetic Registration Record",
+      "input_document": "documents/registration/REGISTRATION_001_POOR_QUALITY.pdf",
+      "ground_truth_json": "ground-truth/registration/REGISTRATION_001_POOR_QUALITY_GROUND_TRUTH.json",
+      "language": "English",
+      "handwritten": false,
+      "quality": "poor",
+      "expected_validation": "match"
+    },
+
+    {
+      "id": "HANDWRITTEN_001",
+      "type": "HANDWRITTEN",
+      "title": "Synthetic Handwritten Legacy Land Record",
+      "input_document": "documents/handwritten/HANDWRITTEN_001.pdf",
+      "ground_truth_json": "ground-truth/handwritten/HANDWRITTEN_001_GROUND_TRUTH.json",
+      "language": "Hindi",
+      "handwritten": true,
+      "quality": "medium",
+      "expected_validation": "match"
+    },
+
+    {
+      "id": "HANDWRITTEN_001_POOR_QUALITY",
+      "type": "HANDWRITTEN",
+      "title": "Highly Degraded Synthetic Handwritten Land Record",
+      "input_document": "documents/handwritten/HANDWRITTEN_001_POOR_QUALITY.pdf",
+      "ground_truth_json": "ground-truth/handwritten/HANDWRITTEN_001_POOR_QUALITY_GROUND_TRUTH.json",
+      "language": "Hindi",
+      "handwritten": true,
+      "quality": "very_poor",
+      "expected_validation": "match"
+    },
+
+    {
+      "id": "HANDWRITTEN_002",
+      "type": "HANDWRITTEN",
+      "title": "Synthetic Handwritten Legacy Land Record",
+      "input_document": "documents/handwritten/HANDWRITTEN_002.pdf",
+      "ground_truth_json": "ground-truth/handwritten/HANDWRITTEN_002_GROUND_TRUTH.json",
+      "language": "Hindi",
+      "handwritten": true,
+      "quality": "poor",
+      "expected_validation": "mismatch"
+    }
+  ]
+}
