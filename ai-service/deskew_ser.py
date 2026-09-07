@@ -1,39 +1,13 @@
-# import math
-# from typing import Tuple, Union
-
-# import cv2
-# import numpy as np
-
-# from deskew import determine_skew
-
-
-# def rotate(
-#         image: np.ndarray, angle: float, background: Union[int, Tuple[int, int, int]]
-# ) -> np.ndarray:
-#     old_width, old_height = image.shape[:2]
-#     angle_radian = math.radians(angle)
-#     width = abs(np.sin(angle_radian) * old_height) + abs(np.cos(angle_radian) * old_width)
-#     height = abs(np.sin(angle_radian) * old_width) + abs(np.cos(angle_radian) * old_height)
-
-#     image_center = tuple(np.array(image.shape[1::-1]) / 2)
-#     rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
-#     rot_mat[1, 2] += (width - old_width) / 2
-#     rot_mat[0, 2] += (height - old_height) / 2
-#     return cv2.warpAffine(image, rot_mat, (int(round(height)), int(round(width))), borderValue=background)
-
-# image = cv2.imread('test_img.jpg')
-# grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-# angle = determine_skew(grayscale)
-# rotated = rotate(image, angle, (0, 0, 0))
-# cv2.imwrite('output.jpg', rotated)
 
 import cv2
 import numpy as np
 from deskew import determine_skew
 from skimage.transform import rotate
+import time
 
+curr_t = int(time.time())
 
-def deskew_image(image_path: str, output_path: str):
+def deskew_image(image_path: str, output_path: str, gray_path:str):
     # 1. Load the image using OpenCV
     image = cv2.imread(image_path)
     if image is None:
@@ -41,7 +15,8 @@ def deskew_image(image_path: str, output_path: str):
 
     # 2. Convert to grayscale
     grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
+    cv2.imwrite(gray_path,grayscale)
+    print(f"Successfully saved grayscale image to: {gray_path}")
     # 3. Determine the skew angle
     # The background_color determines what color the library assumes the canvas is
     angle = determine_skew(grayscale)
@@ -63,10 +38,11 @@ def deskew_image(image_path: str, output_path: str):
 
 # Example usage:
 if __name__ == "__main__":
-    input_img = "test_outputs/1_original.png"  # Replace with your image path
-    output_img = "ai-service/deskew_trial/deskewed_document.jpg"
+    input_img = "ai-service/test_img.jpg"  # Replace with your image path
+    output_img = f"ai-service/deskew_trial/deskewed_document-{curr_t}.png"
+    gray_img = f'ai-service/deskew_trial/graysacle_document-{curr_t}.png'
     
     try:
-        deskew_image(input_img, output_img)
+        deskew_image(input_img, output_img, gray_img)
     except Exception as e:
         print(f"Error: {e}")

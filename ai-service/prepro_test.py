@@ -27,4 +27,4 @@ def test_on_file(image_path: str):
 
 if __name__ == "__main__":
     # Replace with path to a sample land record scan
-    test_on_file("ai-service/test_img.jpg")
+    test_on_file("ai-service/skewed_img_1.png")
