@@ -8,9 +8,7 @@ function formatDocumentType(type) {
   return String(type)
     .replaceAll("_", " ")
     .toLowerCase()
-    .replace(/\b\w/g, (char) =>
-      char.toUpperCase()
-    );
+    .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function formatDate(dateValue) {
@@ -30,9 +28,9 @@ function formatDate(dateValue) {
 }
 
 function DocumentRow({ document }) {
-  const id =
-    document?.id ??
-    document?.document_id;
+  // Backend documents.id is the UUID used by:
+  // GET /api/documents/:id
+  const id = document?.id;
 
   const name =
     document?.original_filename ??
@@ -63,13 +61,22 @@ function DocumentRow({ document }) {
           </div>
 
           <div className="document-name-info">
-            <Link
-              to={`/documents/${id}`}
-              className="document-name-link"
-              title={name}
-            >
-              {name}
-            </Link>
+            {id ? (
+              <Link
+                to={`/documents/${id}`}
+                className="document-name-link"
+                title={name}
+              >
+                {name}
+              </Link>
+            ) : (
+              <span
+                className="document-name-link"
+                title={name}
+              >
+                {name}
+              </span>
+            )}
 
             <span>
               Document ID: {id ?? "—"}
@@ -97,12 +104,18 @@ function DocumentRow({ document }) {
       </td>
 
       <td>
-        <Link
-          to={`/documents/${id}`}
-          className="document-view-button"
-        >
-          View
-        </Link>
+        {id ? (
+          <Link
+            to={`/documents/${id}`}
+            className="document-view-button"
+          >
+            View
+          </Link>
+        ) : (
+          <span className="document-view-button">
+            —
+          </span>
+        )}
       </td>
     </tr>
   );

@@ -30,11 +30,11 @@ function DocumentDetails() {
     refresh,
   } = useDocument(id);
 
-  const [processing, setProcessing] =
-    useState(false);
+  const [processing, setProcessing] = useState(false);
 
-  const [processError, setProcessError] =
-    useState("");
+  const [processError, setProcessError] = useState("");
+
+  const [aiResult, setAiResult] = useState(null);
 
 
   /* =========================
@@ -119,8 +119,34 @@ function DocumentDetails() {
     try {
       setProcessing(true);
       setProcessError("");
+      setAiResult(null);
 
-      await processDocument(id);
+      const response = await processDocument(id);
+
+      /*
+       * Backend response:
+       *
+       * {
+       *   success: true,
+       *   data: {
+       *     document_id: "...",
+       *     ai_result: {
+       *       success: true,
+       *       data: {
+       *         extracted_data: {...}
+       *       }
+       *     }
+       *   }
+       * }
+       */
+
+      const result =
+        response?.data?.ai_result ??
+        response?.ai_result ??
+        response?.data ??
+        response;
+
+      setAiResult(result);
 
       await refresh();
 
@@ -133,13 +159,23 @@ function DocumentDetails() {
       setProcessError(
         err?.response?.data?.message ||
           err?.message ||
-          "Unable to start document processing."
+          "Unable to process document."
       );
 
     } finally {
       setProcessing(false);
     }
   };
+
+
+  /* =========================
+     Extract structured data
+  ========================= */
+
+  const extractedData =
+    aiResult?.data?.extracted_data ??
+    aiResult?.extracted_data ??
+    null;
 
 
   /* =========================
@@ -151,7 +187,7 @@ function DocumentDetails() {
 
       <PageHeader
         title="Document Details"
-        description="Review document metadata and processing state."
+        description="Review document metadata and AI processing results."
         breadcrumbs={[
           "Documents",
           "Details",
@@ -190,7 +226,7 @@ function DocumentDetails() {
         <div>
 
           <span className="document-info-label">
-            PROCESSING PIPELINE
+            AI PROCESSING PIPELINE
           </span>
 
           <h2>
@@ -198,9 +234,8 @@ function DocumentDetails() {
           </h2>
 
           <p>
-            Send this document to the AI
-            processing service for preprocessing,
-            OCR and structured extraction.
+            Preprocessing, OCR, document understanding
+            and structured land-record extraction.
           </p>
 
         </div>
@@ -221,7 +256,7 @@ function DocumentDetails() {
               disabled={processing}
             >
               {processing
-                ? "Starting..."
+                ? "Processing..."
                 : "Process Document"}
             </button>
           )}
@@ -231,7 +266,86 @@ function DocumentDetails() {
       </div>
 
 
-      {/* Next Modules */}
+      {/* =========================
+          AI STRUCTURED DATA
+      ========================= */}
+
+      {extractedData && (
+        <div className="document-ai-result-card">
+
+          <div className="document-ai-result-header">
+
+            <div>
+
+              <span className="document-info-label">
+                AI EXTRACTED DATA
+              </span>
+
+              <h2>
+                Structured Land Record
+              </h2>
+
+              <p>
+                Information automatically extracted
+                from the uploaded document.
+              </p>
+
+            </div>
+
+            <span className="document-ai-success-badge">
+              ✓ AI PROCESSED
+            </span>
+
+          </div>
+
+
+          <div className="document-ai-data-grid">
+
+            {Object.entries(extractedData).map(
+              ([key, value]) => {
+
+                if (
+                  value === null ||
+                  value === undefined ||
+                  typeof value === "object"
+                ) {
+                  return null;
+                }
+
+                const label = key
+                  .replace(/_/g, " ")
+                  .replace(/\b\w/g, char =>
+                    char.toUpperCase()
+                  );
+
+                return (
+                  <div
+                    key={key}
+                    className="document-ai-data-item"
+                  >
+
+                    <span>
+                      {label}
+                    </span>
+
+                    <strong>
+                      {String(value)}
+                    </strong>
+
+                  </div>
+                );
+              }
+            )}
+
+          </div>
+
+        </div>
+      )}
+
+
+      {/* =========================
+          NEXT MODULES
+      ========================= */}
 
       <div className="document-next-step-card">
 
@@ -246,10 +360,9 @@ function DocumentDetails() {
           </h3>
 
           <p>
-            Once AI processing is completed,
-            extracted land-record fields can be
-            validated and linked with the parcel
-            layer.
+            Extracted land-record fields can be
+            validated against reference records
+            and linked with the corresponding parcel.
           </p>
 
         </div>
@@ -257,20 +370,26 @@ function DocumentDetails() {
 
         <div className="document-next-links">
 
-          w
-<Link
-  to={`/gis?documentId=${id}`}
-  className="document-next-module-button"
->
-  View Parcel on GIS
-</Link>
+          <Link
+            to={`/validation?documentId=${id}`}
+            className="document-next-module-button"
+          >
+            Review Validation
+          </Link>
 
           <Link
-  to={`/audit?documentId=${id}`}
-  className="document-next-module-button"
->
-  View Audit History
-</Link>
+            to={`/gis?documentId=${id}`}
+            className="document-next-module-button"
+          >
+            View Parcel on GIS
+          </Link>
+
+          <Link
+            to={`/audit?documentId=${id}`}
+            className="document-next-module-button"
+          >
+            View Audit History
+          </Link>
 
         </div>
 
