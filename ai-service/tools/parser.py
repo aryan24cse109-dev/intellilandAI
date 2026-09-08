@@ -8,12 +8,13 @@ Universal Land Record Extraction Engine for Indian Revenue Documents:
 - Legacy Handwritten Revenue Records (पुरातन राजस्व रजिस्टर प्रविष्टि)
 - Unified Land Records (Cross-document general extraction)
 
-Uses Google Cloud Vertex AI Gemini LLM (`gemini-2.5-flash`) with LangChain
+Uses the Gemini Developer API (`gemini-2.5-flash`) with LangChain
 and structured Pydantic schema enforcement from `schema.py`.
 Stores extracted results in `trial_op_data/` with UTF-8 encoding.
 """
 
 import os
+from dotenv import load_dotenv
 import sys
 import json
 import argparse
@@ -30,6 +31,7 @@ if hasattr(sys.stdout, "reconfigure"):
 
 from pydantic import BaseModel
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_core.prompts import ChatPromptTemplate
 
@@ -42,6 +44,10 @@ if str(AI_SERVICE_DIR) not in sys.path:
     sys.path.insert(0, str(AI_SERVICE_DIR))
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+
+    # Load environment variables from ai-service/.env
+ENV_FILE = AI_SERVICE_DIR / ".env"
+load_dotenv(dotenv_path=ENV_FILE)
 
 from schema import (
     BaseLandRecordSchema,
@@ -92,23 +98,28 @@ SCHEMA_ALIAS_MAP: Dict[str, Type[BaseModel]] = {
 # =============================================================================
 
 def get_llm(
-    model: str = "gemini-2.5-flash",
-    project: str = "ai-api-2335",
-    location: str = "us-central1",
+    model: str = "openrouter/free",
     temperature: float = 0.0,
-) -> ChatGoogleGenerativeAI:
-    """
-    Initializes and returns the Google Cloud Vertex AI Gemini LLM instance
-    as configured for the project.
-    """
-    return ChatGoogleGenerativeAI(
-        model=model,
-        vertexai=True,
-        project=project,
-        location=location,
-        temperature=temperature,
-    )
+) -> ChatOpenAI:
 
+    api_key = os.getenv("OPENROUTER_API_KEY")
+
+    if not api_key:
+        raise RuntimeError(
+            "OpenRouter API key is not configured. "
+            "Set OPENROUTER_API_KEY in ai-service/.env."
+        )
+
+    return ChatOpenAI(
+        model=model,
+        temperature=temperature,
+        api_key=api_key,
+        base_url="https://openrouter.ai/api/v1",
+        default_headers={
+            "HTTP-Referer": "http://localhost:5173",
+            "X-Title": "IntelliLandAI",
+        },
+    )
 
 # Default module-level LLM instance for drop-in compatibility
 llm = get_llm()
