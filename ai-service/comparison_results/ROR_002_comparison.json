@@ -1,0 +1,208 @@
+{
+  "document_name": "ROR_002",
+  "overall_match": false,
+  "overall_similarity_score": 0.9090909090909091,
+  "human_checking_needed": true,
+  "evidence": [
+    "- `land_area_hectares`: Ground Truth is '2.4100', Extracted is '2.14'. This is a significant numerical discrepancy.",
+    "- `land_area_acres`: Ground Truth is '5.955', Extracted is '5.288'. This is a significant numerical discrepancy."
+  ],
+  "critical_mismatches": [
+    "land_area_hectares",
+    "land_area_acres"
+  ],
+  "ignored_discrepancies": [
+    "document_type: Ground truth includes additional bilingual translation and explanatory text ('/ Khatauni (अधिकार अभिलेख / खतौनी)') which is omitted in extraction, but the core meaning is preserved.",
+    "district_hindi: Ground truth includes '(काल्पनिक)' which is a sample data marker and is ignored.",
+    "district_english: Ground truth includes '(Fictional)' which is a sample data marker and is ignored.",
+    "issue_date: Date formats differ ('18-Jun-2026' vs '2026-06-18') but represent the same calendar date.",
+    "annual_revenue_inr: Ground truth includes currency symbol '₹' and trailing zeros which are omitted in extraction, but the numerical value is identical."
+  ],
+  "summary": "The AI-extracted data shows significant discrepancies in land area figures (hectares and acres) compared to the ground truth. While many fields match or have ignorable variations (e.g., date formats, fictional annotations, bilingual text, currency symbols), the core land area values are numerically different, requiring human verification.",
+  "field_comparisons": [
+    {
+      "field_name": "document_type",
+      "ground_truth_value": "Record of Rights / Khatauni (अधिकार अभिलेख / खतौनी)",
+      "extracted_value": "RECORD OF RIGHTS (KHATAUNI)",
+      "match_status": "ignored_variation",
+      "is_match": true,
+      "explanation": "Core document type matches; ground truth includes additional bilingual translation and explanatory text which is omitted in extraction."
+    },
+    {
+      "field_name": "district_hindi",
+      "ground_truth_value": "विजयनगर (काल्पनिक)",
+      "extracted_value": "विजयनगर",
+      "match_status": "ignored_variation",
+      "is_match": true,
+      "explanation": "The '(काल्पनिक)' annotation in ground truth is a sample data marker and is ignored for comparison."
+    },
+    {
+      "field_name": "district_english",
+      "ground_truth_value": "Vijaynagar (Fictional)",
+      "extracted_value": "Vijaynagar",
+      "match_status": "ignored_variation",
+      "is_match": true,
+      "explanation": "The '(Fictional)' annotation in ground truth is a sample data marker and is ignored for comparison."
+    },
+    {
+      "field_name": "tehsil_hindi",
+      "ground_truth_value": "गोपालपुर",
+      "extracted_value": "गोपालपुर",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "tehsil_english",
+      "ground_truth_value": "Gopalpur",
+      "extracted_value": "Gopalpur",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "village_hindi",
+      "ground_truth_value": "सुंदरपुर",
+      "extracted_value": "सुंदरपुर",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "village_english",
+      "ground_truth_value": "Sundarpur",
+      "extracted_value": "Sundarpur",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "khata_number",
+      "ground_truth_value": "287/B",
+      "extracted_value": "287/B",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "khasra_number",
+      "ground_truth_value": "1042/1",
+      "extracted_value": "1042/1",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "owner_name_hindi",
+      "ground_truth_value": "राजेश प्रताप सिंह",
+      "extracted_value": "राजेश प्रताप सिंह",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "owner_name_english",
+      "ground_truth_value": "Rajesh Pratap Singh",
+      "extracted_value": "Rajesh Pratap Singh",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "father_husband_name_hindi",
+      "ground_truth_value": "विक्रम सिंह",
+      "extracted_value": "विक्रम सिंह",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "father_husband_name_english",
+      "ground_truth_value": "Vikram Singh",
+      "extracted_value": "Vikram Singh",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "land_area_hectares",
+      "ground_truth_value": "2.4100",
+      "extracted_value": 2.14,
+      "match_status": "mismatch",
+      "is_match": false,
+      "explanation": "Numerical values for land area in hectares do not match."
+    },
+    {
+      "field_name": "land_area_acres",
+      "ground_truth_value": "5.955",
+      "extracted_value": 5.288,
+      "match_status": "mismatch",
+      "is_match": false,
+      "explanation": "Numerical values for land area in acres do not match."
+    },
+    {
+      "field_name": "land_classification_hindi",
+      "ground_truth_value": "कृषि भूमि (असिंचित / एकफसली)",
+      "extracted_value": "कृषि भूमि (असिंचित / एकफसली)",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "land_classification_english",
+      "ground_truth_value": "Agricultural Land (Unirrigated / Single-cropped)",
+      "extracted_value": "Agricultural Land (Unirrigated / Single-cropped)",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "ownership_share",
+      "ground_truth_value": "1/2 (सह-खातेदार / Joint Ownership)",
+      "extracted_value": "1/2 (सह-खातेदार / Joint Ownership)",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "record_entry_number",
+      "ground_truth_value": "ROR-2026-44910",
+      "extracted_value": "ROR-2026-44910",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "issue_date",
+      "ground_truth_value": "18-Jun-2026",
+      "extracted_value": "2026-06-18",
+      "match_status": "ignored_variation",
+      "is_match": true,
+      "explanation": "Dates are numerically identical, only format differs."
+    },
+    {
+      "field_name": "annual_revenue_inr",
+      "ground_truth_value": "₹ 310.00",
+      "extracted_value": 310.0,
+      "match_status": "ignored_variation",
+      "is_match": true,
+      "explanation": "Numerical value matches; currency symbol and trailing zeros are ignored."
+    },
+    {
+      "field_name": "remarks_hindi",
+      "ground_truth_value": "सह-खातेदार की सहमति दर्ज। राजस्व कर अद्यतन।",
+      "extracted_value": "सह-खातेदार की सहमति दर्ज। राजस्व कर अद्यतन।",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "remarks_english",
+      "ground_truth_value": "Co-owner consent registered. Land revenue updated.",
+      "extracted_value": "Co-owner consent registered. Land revenue updated.",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    }
+  ]
+}
