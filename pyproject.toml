@@ -6,7 +6,15 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "deskew>=1.6.1",
+    "ipykernel>=7.3.0",
+    "langchain>=1.4.0",
+    "langchain-community>=0.4.2",
+    "langchain-google-genai>=4.4.0",
     "numpy>=2.5.2",
     "opencv-python>=5.0.0.93",
+    "paddleocr>=3.4.1",
+    "paddlepaddle>=3.3.1",
+    "pdf2image>=1.17.0",
+    "pymupdf>=1.28.2",
     "scikit-image>=0.26.0",
 ]

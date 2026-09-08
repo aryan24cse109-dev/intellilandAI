@@ -1,0 +1,204 @@
+{
+  "document_name": "MUTATION_001",
+  "overall_match": true,
+  "overall_similarity_score": 1.0,
+  "human_checking_needed": false,
+  "evidence": [],
+  "critical_mismatches": [],
+  "ignored_discrepancies": [
+    "district_hindi: Ground Truth 'सूरजपुर (काल्पनिक)' vs Extracted 'सूरजपुर' (fictional marker ignored).",
+    "district_english: Ground Truth 'Surajpur (Fictional)' vs Extracted 'Surajpur' (fictional marker ignored).",
+    "new_owner_english: Ground Truth 'Suresh Kumaar' vs Extracted 'Suresh Kumar' (minor phonetic transliteration difference ignored).",
+    "land_area_hectares: Ground Truth '1.8500' vs Extracted 1.85 (trailing zeros ignored).",
+    "mutation_type: Ground Truth 'Inheritance / वरासत (उत्तराधिकार)' vs Extracted 'Inheritance' (bilingual translation/parenthetical ignored).",
+    "document_type: Ground Truth 'Land Mutation Register Entry / Namantaran Aadesh (नामांतरण आदेश)' vs Extracted 'LAND MUTATION REGISTER / ORDER ENTRY' (minor phrasing difference ignored).",
+    "mutation_date: Ground Truth '22-Jul-2026' vs Extracted '2026-07-22' (date format difference ignored)."
+  ],
+  "summary": "All critical fields match between the ground truth and extracted data. Minor variations such as trailing zeros in land area, fictional annotations, date format differences, and expanded legal terms in ground truth were ignored as per verification rules. No substantive discrepancies were found.",
+  "field_comparisons": [
+    {
+      "field_name": "document_type",
+      "ground_truth_value": "Land Mutation Register Entry / Namantaran Aadesh (नामांतरण आदेश)",
+      "extracted_value": "LAND MUTATION REGISTER / ORDER ENTRY",
+      "match_status": "partial_match",
+      "is_match": true,
+      "explanation": "Minor phrasing difference in the document header, but the core document type is consistent."
+    },
+    {
+      "field_name": "mutation_number",
+      "ground_truth_value": "MUT-2026-88319",
+      "extracted_value": "MUT-2026-88319",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "mutation_date",
+      "ground_truth_value": "22-Jul-2026",
+      "extracted_value": "2026-07-22",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": "Dates are numerically identical, only the format differs."
+    },
+    {
+      "field_name": "village_hindi",
+      "ground_truth_value": "गोपालपुर",
+      "extracted_value": "गोपालपुर",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "village_english",
+      "ground_truth_value": "Gopalpur",
+      "extracted_value": "Gopalpur",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "tehsil_hindi",
+      "ground_truth_value": "देवगढ़",
+      "extracted_value": "देवगढ़",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "tehsil_english",
+      "ground_truth_value": "Devgarh",
+      "extracted_value": "Devgarh",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "district_hindi",
+      "ground_truth_value": "सूरजपुर (काल्पनिक)",
+      "extracted_value": "सूरजपुर",
+      "match_status": "ignored_variation",
+      "is_match": true,
+      "explanation": "The '(काल्पनिक)' annotation in ground truth is a fictional marker and is ignored as per rule."
+    },
+    {
+      "field_name": "district_english",
+      "ground_truth_value": "Surajpur (Fictional)",
+      "extracted_value": "Surajpur",
+      "match_status": "ignored_variation",
+      "is_match": true,
+      "explanation": "The '(Fictional)' annotation in ground truth is a fictional marker and is ignored as per rule."
+    },
+    {
+      "field_name": "previous_owner_hindi",
+      "ground_truth_value": "स्व. रामप्रसाद शर्मा",
+      "extracted_value": "स्व. रामप्रसाद शर्मा",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "previous_owner_english",
+      "ground_truth_value": "Late Ramprasad Sharma",
+      "extracted_value": "Late Ramprasad Sharma",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "new_owner_hindi",
+      "ground_truth_value": "सुरेश कुमार",
+      "extracted_value": "सुरेश कुमार",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "new_owner_english",
+      "ground_truth_value": "Suresh Kumaar",
+      "extracted_value": "Suresh Kumar",
+      "match_status": "ignored_variation",
+      "is_match": true,
+      "explanation": "Minor phonetic transliteration difference ('Kumaar' vs 'Kumar') which is ignorable as per rule."
+    },
+    {
+      "field_name": "relation_reason_hindi",
+      "ground_truth_value": "उत्तराधिकार (पुत्र) / विधिक वारिस",
+      "extracted_value": "उत्तराधिकार (पुत्र) / विधिक वारिस",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "relation_reason_english",
+      "ground_truth_value": "Inheritance (Son) / Legal Heir",
+      "extracted_value": "Inheritance (Son) / Legal Heir",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "khasra_number",
+      "ground_truth_value": "741/3",
+      "extracted_value": "741/3",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "khata_number",
+      "ground_truth_value": "96/B",
+      "extracted_value": "96/B",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "land_area_hectares",
+      "ground_truth_value": "1.8500",
+      "extracted_value": 1.85,
+      "match_status": "match",
+      "is_match": true,
+      "explanation": "Numerically identical; trailing zeros in ground truth string are ignored as per rule."
+    },
+    {
+      "field_name": "land_area_acres",
+      "ground_truth_value": "4.571",
+      "extracted_value": 4.571,
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "mutation_type",
+      "ground_truth_value": "Inheritance / वरासत (उत्तराधिकार)",
+      "extracted_value": "Inheritance",
+      "match_status": "ignored_variation",
+      "is_match": true,
+      "explanation": "Extracted value contains the core legal concept; bilingual translation/parenthetical in ground truth is ignorable as per rule."
+    },
+    {
+      "field_name": "order_reference_number",
+      "ground_truth_value": "REV-ORD/2026/0914",
+      "extracted_value": "REV-ORD/2026/0914",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "remarks_hindi",
+      "ground_truth_value": "मृत्यु प्रमाण-पत्र व वारिसान जांच के उपरांत नामांतरण स्वीकृत।",
+      "extracted_value": "मृत्यु प्रमाण-पत्र व वारिसान जांच के उपरांत नामांतरण स्वीकृत।",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "remarks_english",
+      "ground_truth_value": "Mutation approved following death certificate & legal heir verification.",
+      "extracted_value": "Mutation approved following death certificate & legal heir verification.",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    }
+  ]
+}

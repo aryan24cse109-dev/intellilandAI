@@ -1,0 +1,192 @@
+{
+  "document_name": "HANDWRITTEN_002",
+  "overall_match": false,
+  "overall_similarity_score": 0.857,
+  "human_checking_needed": true,
+  "evidence": [
+    "- **land_area_hectares**: Ground Truth value '0.6800' (0.68) numerically differs from Extracted value '0.86'. This is a significant numerical discrepancy in a high-priority field.",
+    "- **land_classification_hindi**: Ground Truth value 'कृषि भूमि (असिंचित)' is missing in the Extracted data (null). This is a loss of critical information.",
+    "- **land_classification_english**: Ground Truth value 'Agricultural Land (Unirrigated)' is missing in the Extracted data (null). This is a loss of critical information."
+  ],
+  "critical_mismatches": [
+    "land_area_hectares",
+    "land_classification_hindi",
+    "land_classification_english"
+  ],
+  "ignored_discrepancies": [
+    "district_hindi: Ground Truth 'रामपुर (काल्पनिक)' vs Extracted 'रामपुर'. '(काल्पनिक)' ignored as per Rule 2.",
+    "district_english: Ground Truth 'Rampur (Fictional)' vs Extracted 'Rampur'. '(Fictional)' ignored as per Rule 2.",
+    "record_date: Ground Truth '10-Nov-1979' vs Extracted '1979-11-10'. Date format difference ignored as per Rule 5."
+  ],
+  "summary": "Critical discrepancies found in land area (hectares) and land classification fields. Minor variations in document type, district names (fictional tag), and date format were ignored as per rules. Human checking is required for the substantive mismatches.",
+  "field_comparisons": [
+    {
+      "field_name": "document_type",
+      "ground_truth_value": "Legacy Revenue Register Record / पुरातन राजस्व रजिस्टर प्रविष्टि",
+      "extracted_value": "LEGACY HANDWRITTEN LAND RECORD",
+      "match_status": "partial_match",
+      "is_match": true,
+      "explanation": "The core document type 'Legacy Land Record' is present, but the phrasing and detail differ. Treated as partial match as per Rule 6."
+    },
+    {
+      "field_name": "record_reference_number",
+      "ground_truth_value": "LEGACY-1979/4102",
+      "extracted_value": "LEGACY-1979/4102",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "district_hindi",
+      "ground_truth_value": "रामपुर (काल्पनिक)",
+      "extracted_value": "रामपुर",
+      "match_status": "ignored_variation",
+      "is_match": true,
+      "explanation": "The '(काल्पनिक)' tag in Ground Truth is ignored as per Rule 2."
+    },
+    {
+      "field_name": "district_english",
+      "ground_truth_value": "Rampur (Fictional)",
+      "extracted_value": "Rampur",
+      "match_status": "ignored_variation",
+      "is_match": true,
+      "explanation": "The '(Fictional)' tag in Ground Truth is ignored as per Rule 2."
+    },
+    {
+      "field_name": "tehsil_hindi",
+      "ground_truth_value": "आनंदनगर",
+      "extracted_value": "आनंदनगर",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "tehsil_english",
+      "ground_truth_value": "Anandnagar",
+      "extracted_value": "Anandnagar",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "village_hindi",
+      "ground_truth_value": "चंदनपुर",
+      "extracted_value": "चंदनपुर",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "village_english",
+      "ground_truth_value": "Chandanpur",
+      "extracted_value": "Chandanpur",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "khata_number",
+      "ground_truth_value": "142/A",
+      "extracted_value": "142/A",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "khasra_number",
+      "ground_truth_value": "589/2",
+      "extracted_value": "589/2",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "owner_name_hindi",
+      "ground_truth_value": "हरिप्रसाद वर्मा",
+      "extracted_value": "हरिप्रसाद वर्मा",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "owner_name_english",
+      "ground_truth_value": "Hariprasad Verma",
+      "extracted_value": "Hariprasad Verma",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "father_name_hindi",
+      "ground_truth_value": "स्व. रामदीन वर्मा",
+      "extracted_value": "स्व. रामदीन वर्मा",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "father_name_english",
+      "ground_truth_value": "Late Ramdeen Verma",
+      "extracted_value": "Late Ramdeen Verma",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "land_area_hectares",
+      "ground_truth_value": "0.6800",
+      "extracted_value": 0.86,
+      "match_status": "mismatch",
+      "is_match": false,
+      "explanation": "Numerical values for land area in hectares are different (0.68 vs 0.86). This is a critical mismatch."
+    },
+    {
+      "field_name": "land_area_bigha",
+      "ground_truth_value": "1 बीघा 2 बिस्वा",
+      "extracted_value": "1 बीघा 2 बिस्वा",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "land_classification_hindi",
+      "ground_truth_value": "कृषि भूमि (असिंचित)",
+      "extracted_value": null,
+      "match_status": "mismatch",
+      "is_match": false,
+      "explanation": "Ground Truth value is present, but Extracted value is null. This is a loss of information."
+    },
+    {
+      "field_name": "land_classification_english",
+      "ground_truth_value": "Agricultural Land (Unirrigated)",
+      "extracted_value": null,
+      "match_status": "mismatch",
+      "is_match": false,
+      "explanation": "Ground Truth value is present, but Extracted value is null. This is a loss of information."
+    },
+    {
+      "field_name": "record_date",
+      "ground_truth_value": "10-Nov-1979",
+      "extracted_value": "1979-11-10",
+      "match_status": "ignored_variation",
+      "is_match": true,
+      "explanation": "Dates refer to the same calendar date despite different formatting ('10-Nov-1979' vs '1979-11-10'). Treated as match as per Rule 5."
+    },
+    {
+      "field_name": "remarks_hindi",
+      "ground_truth_value": "पुराना रिकॉर्ड अद्यतन। लगान रसीद संख्या ७४१ दर्ज।",
+      "extracted_value": "पुराना रिकॉर्ड अद्यतन। लगान रसीद संख्या ७४१ दर्ज।",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "remarks_english",
+      "ground_truth_value": "Legacy record updated. Revenue receipt no. 741 logged.",
+      "extracted_value": "Legacy record updated. Revenue receipt no. 741 logged.",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    }
+  ]
+}
