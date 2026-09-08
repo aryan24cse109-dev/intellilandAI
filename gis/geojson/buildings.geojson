@@ -1,0 +1,10 @@
+{
+"type": "FeatureCollection",
+"name": "buildings",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{"type":"Feature","properties":{"fid":1,"building_id":"B001","building_name":"P001 Building","building_type":"Residential","source":"Synthetic"},"geometry":{"type":"Polygon","coordinates":[[[-0.844074844074844,-0.27027027027027],[-0.844074844074844,-0.004158004158004],[-0.403326403326403,-0.004158004158004],[-0.403326403326403,-0.27027027027027],[-0.844074844074844,-0.27027027027027]]]}},
+{"type":"Feature","properties":{"fid":2,"building_id":"B002","building_name":"P002 Building","building_type":"Residential","source":"Synthetic"},"geometry":{"type":"Polygon","coordinates":[[[0.024948024948025,-0.261954261954262],[0.024948024948025,0.004158004158004],[0.573804573804574,0.004158004158004],[0.573804573804574,-0.261954261954262],[0.024948024948025,-0.261954261954262]]]}},
+{"type":"Feature","properties":{"fid":3,"building_id":"B003","building_name":"P003 Building","building_type":"Residential","source":"Synthetic"},"geometry":{"type":"Polygon","coordinates":[[[0.997920997920998,-0.253638253638254],[0.997920997920998,0.012474012474012],[1.496881496881497,0.012474012474012],[1.496881496881497,-0.253638253638254],[0.997920997920998,-0.253638253638254]]]}}
+]
+}
