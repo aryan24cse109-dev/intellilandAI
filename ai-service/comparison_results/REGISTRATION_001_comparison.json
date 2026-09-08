@@ -1,0 +1,205 @@
+{
+  "document_name": "REGISTRATION_001",
+  "overall_match": true,
+  "overall_similarity_score": 1.0,
+  "human_checking_needed": false,
+  "evidence": [],
+  "critical_mismatches": [],
+  "ignored_discrepancies": [
+    "document_type: Extracted data omits Hindi translation and uses different punctuation.",
+    "seller_name: Minor Hindi orthographic variation ('वर्मा' vs 'वमार्मा').",
+    "seller_father_name: Minor Hindi orthographic variation ('वर्मा' vs 'वमार्मा').",
+    "district_hindi: Extracted data omits '(काल्पनिक)' annotation.",
+    "district_english: Extracted data omits '(Fictional)' annotation.",
+    "land_area_hectares: Trailing zeros in ground truth ('1.8500' vs 1.85) are ignored.",
+    "consideration_value_inr: Formatting differences (currency symbol, commas, textual representation) are ignored as the numerical value is the same.",
+    "stamp_duty_paid_inr: Formatting differences (currency symbol, commas) are ignored as the numerical value is the same."
+  ],
+  "summary": "The AI-extracted data shows a high degree of accuracy, with all critical fields matching the ground truth. Minor differences, such as trailing zeros in land area, omission of fictional annotations, minor Hindi orthographic variations, and formatting of currency values, are considered ignorable as per the verification rules and do not represent substantive discrepancies. No human checking is required.",
+  "field_comparisons": [
+    {
+      "field_name": "document_type",
+      "ground_truth_value": "Sub-Registrar Office Property Sale Deed / संपत्ति विक्रय विलेख",
+      "extracted_value": "SUB-REGISTRAR OFFICE — PROPERTY SALE DEED",
+      "match_status": "partial_match",
+      "is_match": true,
+      "explanation": "Core document type 'Sub-Registrar Office Property Sale Deed' matches, but phrasing and inclusion of Hindi translation differ. This is considered an acceptable variation."
+    },
+    {
+      "field_name": "registration_number",
+      "ground_truth_value": "REG-2026-004812",
+      "extracted_value": "REG-2026-004812",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "registration_date",
+      "ground_truth_value": "14-Aug-2026",
+      "extracted_value": "14-Aug-2026",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "seller_name",
+      "ground_truth_value": "Ramesh Chandra Verma (रमेश चंद्र वर्मा)",
+      "extracted_value": "Ramesh Chandra Verma (रमेश चंद्र वमार्मा)",
+      "match_status": "ignored_variation",
+      "is_match": true,
+      "explanation": "Minor Hindi orthographic variation in 'वर्मा' vs 'वमार्मा' due to OCR noise, but the name is semantically identical."
+    },
+    {
+      "field_name": "seller_father_name",
+      "ground_truth_value": "Late Badri Prasad Verma (स्व. बद्री प्रसाद वर्मा)",
+      "extracted_value": "Late Badri Prasad Verma (स्व. बद्री प्रसाद वमार्मा)",
+      "match_status": "ignored_variation",
+      "is_match": true,
+      "explanation": "Minor Hindi orthographic variation in 'वर्मा' vs 'वमार्मा' due to OCR noise, but the name is semantically identical."
+    },
+    {
+      "field_name": "buyer_name",
+      "ground_truth_value": "Anil Kumar Srivastava (अनिल कुमार श्रीवास्तव)",
+      "extracted_value": "Anil Kumar Srivastava (अनिल कुमार श्रीवास्तव)",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "buyer_father_name",
+      "ground_truth_value": "Harish Chandra Srivastava (हरीश चंद्र श्रीवास्तव)",
+      "extracted_value": "Harish Chandra Srivastava (हरीश चंद्र श्रीवास्तव)",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "village_hindi",
+      "ground_truth_value": "गोपालपुर",
+      "extracted_value": "गोपालपुर",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "village_english",
+      "ground_truth_value": "Gopalpur",
+      "extracted_value": "Gopalpur",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "tehsil_hindi",
+      "ground_truth_value": "देवगढ़",
+      "extracted_value": "देवगढ़",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "tehsil_english",
+      "ground_truth_value": "Devgarh",
+      "extracted_value": "Devgarh",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "district_hindi",
+      "ground_truth_value": "सूरजपुर (काल्पनिक)",
+      "extracted_value": "सूरजपुर",
+      "match_status": "ignored_variation",
+      "is_match": true,
+      "explanation": "Extracted data omits the '(काल्पनिक)' annotation, which is a fictional/sample data marker and not a substantive difference."
+    },
+    {
+      "field_name": "district_english",
+      "ground_truth_value": "Surajpur (Fictional)",
+      "extracted_value": "Surajpur",
+      "match_status": "ignored_variation",
+      "is_match": true,
+      "explanation": "Extracted data omits the '(Fictional)' annotation, which is a fictional/sample data marker and not a substantive difference."
+    },
+    {
+      "field_name": "survey_number",
+      "ground_truth_value": "SV-402",
+      "extracted_value": "SV-402",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "khasra_number",
+      "ground_truth_value": "741/3",
+      "extracted_value": "741/3",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "land_area_hectares",
+      "ground_truth_value": "1.8500",
+      "extracted_value": 1.85,
+      "match_status": "match",
+      "is_match": true,
+      "explanation": "Numerically identical; trailing zeros in ground truth ('1.8500' vs 1.85) are ignored as per rule 1."
+    },
+    {
+      "field_name": "land_area_acres",
+      "ground_truth_value": "4.571",
+      "extracted_value": 4.571,
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "property_description",
+      "ground_truth_value": "Agricultural land plot situated at Survey No. SV-402, Khasra No. 741/3, Village Gopalpur, with clear title boundary and access path.",
+      "extracted_value": "Agricultural land plot situated at Survey No. SV-402, Khasra No. 741/3, Village Gopalpur, with clear title boundary and access path.",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "consideration_value_inr",
+      "ground_truth_value": "₹ 4,500,000 (INR Forty-Five Lakhs Only)",
+      "extracted_value": 4500000.0,
+      "match_status": "ignored_variation",
+      "is_match": true,
+      "explanation": "Numerical value is identical; differences are in formatting (currency symbol, commas, textual representation vs. clean float)."
+    },
+    {
+      "field_name": "stamp_duty_paid_inr",
+      "ground_truth_value": "₹ 315,000",
+      "extracted_value": 315000.0,
+      "match_status": "ignored_variation",
+      "is_match": true,
+      "explanation": "Numerical value is identical; differences are in formatting (currency symbol, commas vs. clean float)."
+    },
+    {
+      "field_name": "witness_1",
+      "ground_truth_value": "Sunil Nath (सुनील नाथ), R/o Devgarh",
+      "extracted_value": "Sunil Nath (सुनील नाथ), R/o Devgarh",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "witness_2",
+      "ground_truth_value": "Prakash Joshi (प्रकाश जोशी), R/o Gopalpur",
+      "extracted_value": "Prakash Joshi (प्रकाश जोशी), R/o Gopalpur",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    },
+    {
+      "field_name": "remarks",
+      "ground_truth_value": "Clean title verified. All stamp duty and registration fees fully paid as per valuation rules.",
+      "extracted_value": "Clean title verified. All stamp duty and registration fees fully paid as per valuation rules.",
+      "match_status": "match",
+      "is_match": true,
+      "explanation": null
+    }
+  ]
+}
