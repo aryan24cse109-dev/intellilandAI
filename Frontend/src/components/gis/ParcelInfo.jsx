@@ -39,7 +39,13 @@ function ParcelInfo({ parcel, loading }) {
         </div>
 
         <span className="parcel-verified-badge">
-          Reference
+          {data.link_method === "ulpin_exact"
+            ? "ULPIN match"
+            : data.link_method === "survey_khasra"
+              ? "Survey + Khasra"
+              : data.link_method === "khasra_location"
+                ? "Khasra-based link"
+                : "Reference parcel"}
         </span>
       </div>
 
@@ -85,7 +91,9 @@ function ParcelInfo({ parcel, loading }) {
         <div className="parcel-info-field">
           <span>Area</span>
           <strong>
-            {data.area ? `${data.area} sq.m` : "—"}
+            {data.area_hectares
+              ? `${data.area_hectares} ha`
+              : "—"}
           </strong>
         </div>
 
@@ -101,7 +109,7 @@ function ParcelInfo({ parcel, loading }) {
 
       <div className="parcel-info-source">
         <span className="source-dot"></span>
-        Government reference data
+        Synthetic demo GIS/reference data
       </div>
     </div>
   );

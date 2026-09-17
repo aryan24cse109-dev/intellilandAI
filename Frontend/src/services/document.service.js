@@ -28,7 +28,11 @@ export const uploadDocument = async (formData) => {
 
 export const processDocument = async (id) => {
   const response = await api.post(
-    `/documents/${id}/process`
+    `/documents/${id}/process`,
+    undefined,
+    {
+      timeout: 120000,
+    }
   );
 
   return response.data;

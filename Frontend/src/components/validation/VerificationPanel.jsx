@@ -128,14 +128,9 @@ function VerificationPanel({
        */
 
       const payload = {
-        document_id: Number(
-          documentId
-        ),
+        document_id: documentId,
 
-        validation_result_id:
-          validationId
-            ? Number(validationId)
-            : undefined,
+        validation_result_id: validationId || undefined,
 
         field_name:
           fieldName,
@@ -301,11 +296,13 @@ function VerificationPanel({
               }
               disabled={
                 submitting ||
-                action === "REJECT" ||
-                action ===
-                  "MARK_DISPUTED"
+                action !== "CORRECT"
               }
-              placeholder="Enter verified value"
+              placeholder={
+                action === "CORRECT"
+                  ? "Enter corrected value"
+                  : "Choose Correct to edit this value"
+              }
             />
 
           </div>

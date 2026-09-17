@@ -1,6 +1,12 @@
 const env = require("../config/env");
 
 const processDocumentWithAI = async (document) => {
+  const controller = new AbortController();
+
+  const timeout = setTimeout(() => {
+    controller.abort();
+  }, 120000);
+
   try {
     const response = await fetch(
       `${env.aiServiceUrl}/ai/process-document`,
@@ -15,6 +21,7 @@ const processDocumentWithAI = async (document) => {
           document_type: document.document_type,
           language: document.language || null,
         }),
+        signal: controller.signal,
       }
     );
 
@@ -37,16 +44,22 @@ const processDocumentWithAI = async (document) => {
 
     return result;
   } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error(
+        "AI document processing timed out after 120 seconds"
+      );
+    }
+
     if (
       error?.name === "TypeError" &&
       error?.message?.toLowerCase().includes("fetch")
     ) {
-      throw new Error(
-        "AI processing service is unavailable"
-      );
+      throw new Error("AI processing service is unavailable");
     }
 
     throw error;
+  } finally {
+    clearTimeout(timeout);
   }
 };
 

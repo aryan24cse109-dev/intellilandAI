@@ -24,7 +24,7 @@ VALUES
     '11111111-1111-1111-1111-111111111111',
     'Admin User',
     'admin@intelliland.local',
-    'DEMO_HASH_ADMIN',
+    '$2b$12$yWyMwlVOzhjrw1Sxemxtb.yORSCOfxzBbSCkp44fxXp4CdzOG2Vq6',
     'ADMIN',
     TRUE
 ),
@@ -32,7 +32,7 @@ VALUES
     '22222222-2222-2222-2222-222222222222',
     'Revenue Officer',
     'officer@intelliland.local',
-    'DEMO_HASH_OFFICER',
+    '$2b$12$yWyMwlVOzhjrw1Sxemxtb.yORSCOfxzBbSCkp44fxXp4CdzOG2Vq6',
     'OFFICER',
     TRUE
 ),
@@ -40,11 +40,12 @@ VALUES
     '33333333-3333-3333-3333-333333333333',
     'Verification Officer',
     'verifier@intelliland.local',
-    'DEMO_HASH_VERIFIER',
+    '$2b$12$yWyMwlVOzhjrw1Sxemxtb.yORSCOfxzBbSCkp44fxXp4CdzOG2Vq6',
     'VERIFIER',
     TRUE
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE
+SET password_hash = EXCLUDED.password_hash;
 
 
 -- ============================================================

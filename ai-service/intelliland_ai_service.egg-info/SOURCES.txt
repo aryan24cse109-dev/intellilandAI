@@ -1,0 +1,6 @@
+pyproject.toml
+intelliland_ai_service.egg-info/PKG-INFO
+intelliland_ai_service.egg-info/SOURCES.txt
+intelliland_ai_service.egg-info/dependency_links.txt
+intelliland_ai_service.egg-info/requires.txt
+intelliland_ai_service.egg-info/top_level.txt

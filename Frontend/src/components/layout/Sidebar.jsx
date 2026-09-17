@@ -88,7 +88,7 @@ function Sidebar({ isOpen, onClose }) {
           isOpen ? "sidebar-open" : ""
         }`}
       >
-        {/* Brand */}
+        {/* Brand - Fixed */}
         <div className="sidebar-brand">
           <img
             src="/logo/intelliland-logo.png"
@@ -106,42 +106,45 @@ function Sidebar({ isOpen, onClose }) {
           </button>
         </div>
 
-        {/* Workspace label */}
-        <div className="sidebar-section-label">
-          WORKSPACE
+        {/* Workspace + Navigation - Scrollable */}
+        <div className="sidebar-scroll-area">
+          {/* Workspace label */}
+          <div className="sidebar-section-label">
+            WORKSPACE
+          </div>
+
+          {/* Navigation */}
+          <nav
+            className="sidebar-navigation"
+            aria-label="Main navigation"
+          >
+            {visibleItems.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  `sidebar-nav-item ${
+                    isActive
+                      ? "sidebar-nav-item-active"
+                      : ""
+                  }`
+                }
+              >
+                <span
+                  className="sidebar-nav-icon"
+                  aria-hidden="true"
+                >
+                  {item.icon}
+                </span>
+
+                <span>{item.label}</span>
+              </NavLink>
+            ))}
+          </nav>
         </div>
 
-        {/* Navigation */}
-        <nav
-          className="sidebar-navigation"
-          aria-label="Main navigation"
-        >
-          {visibleItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              onClick={onClose}
-              className={({ isActive }) =>
-                `sidebar-nav-item ${
-                  isActive
-                    ? "sidebar-nav-item-active"
-                    : ""
-                }`
-              }
-            >
-              <span
-                className="sidebar-nav-icon"
-                aria-hidden="true"
-              >
-                {item.icon}
-              </span>
-
-              <span>{item.label}</span>
-            </NavLink>
-          ))}
-        </nav>
-
-        {/* Bottom section */}
+        {/* Bottom Section - Fixed */}
         <div className="sidebar-bottom">
           <div className="sidebar-system-status">
             <span

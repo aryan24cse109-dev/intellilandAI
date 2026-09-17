@@ -380,6 +380,21 @@ CREATE TABLE IF NOT EXISTS parcels (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE documents
+ADD COLUMN IF NOT EXISTS extraction_source VARCHAR(100);
+
+-- A parcel may be linked to a newly processed record without overwriting the
+-- original synthetic reference record which owns the geometry.
+CREATE TABLE IF NOT EXISTS parcel_links (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    land_record_id UUID NOT NULL REFERENCES land_records(id) ON DELETE CASCADE,
+    parcel_id UUID NOT NULL REFERENCES parcels(id) ON DELETE RESTRICT,
+    link_method VARCHAR(50) NOT NULL CHECK (link_method IN ('ulpin_exact', 'survey_khasra', 'khasra_location', 'manual_review')),
+    link_status VARCHAR(30) NOT NULL DEFAULT 'linked' CHECK (link_status IN ('linked', 'needs_review')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (land_record_id, parcel_id)
+);
+
 
 -- ============================================================
 -- 10. VALIDATION RESULTS
@@ -651,6 +666,9 @@ ON parcels(khasra_number);
 
 CREATE INDEX IF NOT EXISTS idx_parcels_land_record
 ON parcels(land_record_id);
+
+CREATE INDEX IF NOT EXISTS idx_parcel_links_land_record
+ON parcel_links(land_record_id);
 
 
 -- ============================================================

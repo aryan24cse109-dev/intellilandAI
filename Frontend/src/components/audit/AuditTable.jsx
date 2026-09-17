@@ -44,6 +44,14 @@ function getActionClass(action) {
   return "audit-action-default";
 }
 
+function formatAuditValue(value) {
+  if (value === null || value === undefined) return "—";
+  if (typeof value !== "object") return String(value);
+  return Object.entries(value)
+    .map(([key, entry]) => `${key}: ${entry ?? "—"}`)
+    .join("; ");
+}
+
 function AuditTable({ logs = [] }) {
   if (!logs.length) {
     return (
@@ -93,6 +101,7 @@ function AuditTable({ logs = [] }) {
             const field =
               log.field_name ||
               log.field ||
+              log.new_value?.field ||
               "—";
 
             const oldValue =
@@ -152,13 +161,13 @@ function AuditTable({ logs = [] }) {
 
                 <td>
                   <span className="audit-value old">
-                    {String(oldValue)}
+                    {formatAuditValue(oldValue)}
                   </span>
                 </td>
 
                 <td>
                   <span className="audit-value new">
-                    {String(newValue)}
+                    {formatAuditValue(newValue)}
                   </span>
                 </td>
 

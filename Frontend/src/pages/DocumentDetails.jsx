@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Link,
@@ -35,6 +35,50 @@ function DocumentDetails() {
   const [processError, setProcessError] = useState("");
 
   const [aiResult, setAiResult] = useState(null);
+
+
+  /* =========================
+     Keep local processing state
+     synchronized with backend
+     ========================= */
+
+  useEffect(() => {
+    if (!document) {
+      return;
+    }
+
+    const backendStatus =
+      document?.processing_status ??
+      document?.status ??
+      "";
+
+    const normalizedBackendStatus =
+      String(backendStatus).toUpperCase();
+
+    /*
+     * If the backend says the document is still
+     * processing, keep the UI in processing mode.
+     *
+     * This is important after a page refresh or
+     * when the frontend request times out while
+     * backend processing continues.
+     */
+
+    if (
+      normalizedBackendStatus === "PROCESSING" ||
+      normalizedBackendStatus === "PREPROCESSING"
+    ) {
+      setProcessing(true);
+      return;
+    }
+
+    /*
+     * Once backend processing finishes or fails,
+     * allow the UI to leave the local processing state.
+     */
+
+    setProcessing(false);
+  }, [document]);
 
 
   /* =========================
@@ -103,12 +147,23 @@ function DocumentDetails() {
     String(status).toUpperCase();
 
 
+  /*
+   * A document should not be processed again
+   * while it is already being processed or after
+   * processing has completed.
+   */
+
+  const backendIsProcessing =
+    normalizedStatus === "PROCESSING" ||
+    normalizedStatus === "PREPROCESSING";
+
+  const processingCompleted =
+    normalizedStatus === "COMPLETED";
+
   const canProcess =
-    ![
-      "PROCESSING",
-      "PREPROCESSING",
-      "COMPLETED",
-    ].includes(normalizedStatus);
+    !backendIsProcessing &&
+    !processingCompleted &&
+    !processing;
 
 
   /* =========================
@@ -116,12 +171,30 @@ function DocumentDetails() {
   ========================= */
 
   const handleProcess = async () => {
+
+    /*
+     * Prevent accidental double-clicks or multiple
+     * requests while the current request is active.
+     */
+
+    if (
+      processing ||
+      backendIsProcessing
+    ) {
+      return;
+    }
+
     try {
       setProcessing(true);
+
       setProcessError("");
+
       setAiResult(null);
 
-      const response = await processDocument(id);
+
+      const response =
+        await processDocument(id);
+
 
       /*
        * Backend response:
@@ -140,29 +213,93 @@ function DocumentDetails() {
        * }
        */
 
+
       const result =
         response?.data?.ai_result ??
         response?.ai_result ??
         response?.data ??
         response;
 
+
       setAiResult(result);
+
+
+      /*
+       * Refresh document data so that:
+       *
+       * - processing_status updates
+       * - extraction_source updates
+       * - persisted extracted data appears
+       * - validation/GIS links use the latest state
+       */
 
       await refresh();
 
     } catch (err) {
+
       console.error(
         "Document processing failed:",
         err
       );
 
-      setProcessError(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Unable to process document."
-      );
+
+      /*
+       * If the frontend request timed out, the backend
+       * may still be processing the document.
+       *
+       * Therefore refresh the document once before
+       * showing the final error state.
+       */
+
+      try {
+        await refresh();
+      } catch (refreshError) {
+        console.error(
+          "Unable to refresh document after processing error:",
+          refreshError
+        );
+      }
+
+
+      /*
+       * Read the latest backend status after refresh.
+       *
+       * If the backend is still processing, don't
+       * incorrectly tell the user that processing failed.
+       */
+
+      const latestStatus =
+        document?.processing_status ??
+        document?.status ??
+        "";
+
+      const normalizedLatestStatus =
+        String(latestStatus).toUpperCase();
+
+
+      const backendStillProcessing =
+        normalizedLatestStatus === "PROCESSING" ||
+        normalizedLatestStatus === "PREPROCESSING";
+
+
+      if (!backendStillProcessing) {
+        setProcessError(
+          err?.response?.data?.message ||
+            err?.message ||
+            "Unable to process document."
+        );
+      }
 
     } finally {
+
+      /*
+       * Do not blindly leave the UI stuck in processing
+       * if the request finishes.
+       *
+       * The useEffect above will synchronize this again
+       * with the actual backend document status.
+       */
+
       setProcessing(false);
     }
   };
@@ -175,6 +312,7 @@ function DocumentDetails() {
   const extractedData =
     aiResult?.data?.extracted_data ??
     aiResult?.extracted_data ??
+    document?.extracted_data ??
     null;
 
 
@@ -203,14 +341,18 @@ function DocumentDetails() {
       />
 
 
-      {/* Document Information */}
+      {/* =========================
+          Document Information
+      ========================= */}
 
       <DocumentInfoCard
         document={document}
       />
 
 
-      {/* Processing Error */}
+      {/* =========================
+          Processing Error
+      ========================= */}
 
       {processError && (
         <div className="document-process-error">
@@ -219,7 +361,9 @@ function DocumentDetails() {
       )}
 
 
-      {/* Processing Panel */}
+      {/* =========================
+          Processing Panel
+      ========================= */}
 
       <div className="document-processing-panel">
 
@@ -238,6 +382,29 @@ function DocumentDetails() {
             and structured land-record extraction.
           </p>
 
+
+          {/* =========================
+              Active Processing Message
+          ========================= */}
+
+          {processing && (
+            <div
+              className="document-processing-message"
+              role="status"
+              aria-live="polite"
+            >
+              <strong>
+                Processing document...
+              </strong>
+
+              <span>
+                OCR, document understanding and
+                structured data extraction are in progress.
+                This may take a few minutes.
+              </span>
+            </div>
+          )}
+
         </div>
 
 
@@ -248,16 +415,37 @@ function DocumentDetails() {
           />
 
 
+          {/* =========================
+              Process Button
+          ========================= */}
+
           {canProcess && (
             <button
               type="button"
               className="document-process-button"
               onClick={handleProcess}
               disabled={processing}
+              aria-busy={processing}
             >
               {processing
                 ? "Processing..."
                 : "Process Document"}
+            </button>
+          )}
+
+
+          {/* =========================
+              Explicit Processing State
+          ========================= */}
+
+          {backendIsProcessing && (
+            <button
+              type="button"
+              className="document-process-button"
+              disabled
+              aria-busy="true"
+            >
+              Processing...
             </button>
           )}
 
@@ -293,7 +481,10 @@ function DocumentDetails() {
             </div>
 
             <span className="document-ai-success-badge">
-              ✓ AI PROCESSED
+              {document?.extraction_source ===
+              "synthetic_ground_truth_fallback"
+                ? "SYNTHETIC DEMO FALLBACK"
+                : "✓ AI PROCESSED"}
             </span>
 
           </div>
@@ -312,11 +503,14 @@ function DocumentDetails() {
                   return null;
                 }
 
+
                 const label = key
                   .replace(/_/g, " ")
-                  .replace(/\b\w/g, char =>
-                    char.toUpperCase()
+                  .replace(
+                    /\b\w/g,
+                    char => char.toUpperCase()
                   );
+
 
                 return (
                   <div
@@ -371,7 +565,7 @@ function DocumentDetails() {
         <div className="document-next-links">
 
           <Link
-            to={`/validation?documentId=${id}`}
+            to={`/validation/${id}`}
             className="document-next-module-button"
           >
             Review Validation

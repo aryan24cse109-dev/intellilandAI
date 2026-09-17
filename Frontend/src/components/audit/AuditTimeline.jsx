@@ -64,12 +64,14 @@ function AuditTimeline({ logs = [] }) {
         const field =
           log.field_name ||
           log.field ||
+          log.new_value?.field ||
           null;
 
         const description =
           log.notes ||
           log.description ||
           log.message ||
+          log.new_value?.remarks ||
           "Audit action recorded.";
 
         const timelineClass =

@@ -8,7 +8,6 @@ import {
 import { useEffect } from "react";
 import L from "leaflet";
 
-import ParcelPopup from "./ParcelPopup";
 import MapControls from "./MapControls";
 
 import "leaflet/dist/leaflet.css";
@@ -56,8 +55,10 @@ function ParcelMap({ parcel, onParcelClick }) {
     : null;
 
   const geoJsonStyle = {
-    weight: 3,
-    fillOpacity: 0.35,
+    color: "#1d4ed8",
+    fillColor: "#60a5fa",
+    weight: 4,
+    fillOpacity: 0.55,
   };
 
   const highlightStyle = {
@@ -80,10 +81,11 @@ function ParcelMap({ parcel, onParcelClick }) {
       },
     });
 
-    if (parcel) {
-      layer.bindPopup(
-        document.createElement("div")
-      );
+    if (data) {
+      const title = data.parcel_id || data.khasra_number || "Synthetic demo parcel";
+      const popup = document.createElement("div");
+      popup.textContent = `${title} | Khasra: ${data.khasra_number || "—"} | Link: ${data.link_method || "reference_record"} | Synthetic demo GIS data`;
+      layer.bindPopup(popup);
     }
   };
 
@@ -115,9 +117,6 @@ function ParcelMap({ parcel, onParcelClick }) {
           </>
         )}
 
-        {parcel && geometry && (
-          <ParcelPopup parcel={parcel} />
-        )}
       </MapContainer>
 
       <div className="map-source-label">

@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+python-multipart
+numpy
+opencv-python
+pymupdf
+scikit-image
+deskew
+langchain
+langchain-community
+langchain-openai
+python-dotenv
+paddleocr

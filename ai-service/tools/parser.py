@@ -1,27 +1,45 @@
 """
 ai-service/tools/parser.py
 
-Universal Land Record Extraction Engine for Indian Revenue Documents:
-- Land Mutation Register / Orders (Namantaran Aadesh / नामांतरण आदेश)
-- Property Registration Sale Deeds (Sub-Registrar / संपत्ति विक्रय विलेख)
-- Record of Rights / Khatauni / Jamabandi (अधिकार अभिलेख / खतौनी)
-- Legacy Handwritten Revenue Records (पुरातन राजस्व रजिस्टर प्रविष्टि)
-- Unified Land Records (Cross-document general extraction)
+Universal Land Record Extraction Engine for Indian Revenue Documents.
 
-Uses the Gemini Developer API (`gemini-2.5-flash`) with LangChain
-and structured Pydantic schema enforcement from `schema.py`.
-Stores extracted results in `trial_op_data/` with UTF-8 encoding.
+Supported document types:
+- Land Mutation Register / Orders
+- Property Registration Sale Deeds
+- Record of Rights / Khatauni / Jamabandi
+- Legacy Handwritten Revenue Records
+- Unified Land Records
+
+Architecture:
+- OpenRouter OpenAI-compatible endpoint
+- LangChain ChatOpenAI
+- Pydantic schemas from schema.py
+- Robust JSON extraction from LLM responses
+- Normalization of common LLM field-name variations
+- Zero fabricated values
+- UTF-8 support for Hindi / Devanagari
 """
 
-import os
-from dotenv import load_dotenv
-import sys
-import json
+from __future__ import annotations
+
 import argparse
+import json
+import os
+import re
+import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
-# Ensure UTF-8 stdout/stderr encoding for Hindi text handling on Windows
+from dotenv import load_dotenv
+from pydantic import BaseModel
+from langchain_openai import ChatOpenAI
+from langchain_community.document_loaders import PyMuPDFLoader
+
+
+# =============================================================================
+# UTF-8 CONFIGURATION
+# =============================================================================
+
 if hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8")
@@ -29,25 +47,33 @@ if hasattr(sys.stdout, "reconfigure"):
     except Exception:
         pass
 
-from pydantic import BaseModel
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_openai import ChatOpenAI
-from langchain_community.document_loaders import PyMuPDFLoader
-from langchain_core.prompts import ChatPromptTemplate
 
-# Ensure parent directory (ai-service/) is in search path
+# =============================================================================
+# PATH CONFIGURATION
+# =============================================================================
+
 CURRENT_DIR = Path(__file__).resolve().parent
 AI_SERVICE_DIR = CURRENT_DIR.parent
 PROJECT_ROOT = AI_SERVICE_DIR.parent
 
 if str(AI_SERVICE_DIR) not in sys.path:
     sys.path.insert(0, str(AI_SERVICE_DIR))
+
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-    # Load environment variables from ai-service/.env
+
+# =============================================================================
+# ENVIRONMENT
+# =============================================================================
+
 ENV_FILE = AI_SERVICE_DIR / ".env"
 load_dotenv(dotenv_path=ENV_FILE)
+
+
+# =============================================================================
+# SCHEMA IMPORTS
+# =============================================================================
 
 from schema import (
     BaseLandRecordSchema,
@@ -57,14 +83,12 @@ from schema import (
     RORDocumentSchema,
     UnifiedLandRecordSchema,
     DocumentCategory,
-    detect_document_category,
-    parse_land_document,
     parse_numeric_area,
 )
 
 
 # =============================================================================
-# Schema Registry and Mappings
+# SCHEMA REGISTRY
 # =============================================================================
 
 SCHEMA_REGISTRY: Dict[DocumentCategory, Type[BaseModel]] = {
@@ -74,6 +98,7 @@ SCHEMA_REGISTRY: Dict[DocumentCategory, Type[BaseModel]] = {
     DocumentCategory.ROR: RORDocumentSchema,
     DocumentCategory.UNKNOWN: UnifiedLandRecordSchema,
 }
+
 
 SCHEMA_ALIAS_MAP: Dict[str, Type[BaseModel]] = {
     "mutation": MutationDocumentSchema,
@@ -94,13 +119,19 @@ SCHEMA_ALIAS_MAP: Dict[str, Type[BaseModel]] = {
 
 
 # =============================================================================
-# LLM Initialization
+# LLM INITIALIZATION
 # =============================================================================
 
 def get_llm(
-    model: str = "openrouter/free",
+    model: Optional[str] = None,
     temperature: float = 0.0,
 ) -> ChatOpenAI:
+    """
+    Creates the OpenRouter ChatOpenAI client.
+
+    The client is initialized lazily so the FastAPI service can start even
+    when the OpenRouter key is unavailable.
+    """
 
     api_key = os.getenv("OPENROUTER_API_KEY")
 
@@ -110,139 +141,241 @@ def get_llm(
             "Set OPENROUTER_API_KEY in ai-service/.env."
         )
 
+    selected_model = (
+        model
+        or os.getenv("OPENROUTER_MODEL")
+        or "openrouter/free"
+    )
+
+    try:
+        timeout = float(os.getenv("OPENROUTER_TIMEOUT", "120"))
+    except ValueError:
+        timeout = 120.0
+
+    try:
+        max_retries = int(os.getenv("OPENROUTER_MAX_RETRIES", "2"))
+    except ValueError:
+        max_retries = 2
+
     return ChatOpenAI(
-        model=model,
+        model=selected_model,
         temperature=temperature,
         api_key=api_key,
         base_url="https://openrouter.ai/api/v1",
+        timeout=timeout,
+        max_retries=max_retries,
         default_headers={
             "HTTP-Referer": "http://localhost:5173",
             "X-Title": "IntelliLandAI",
         },
     )
 
-# Default module-level LLM instance for drop-in compatibility
-llm = get_llm()
+
+# Global lazy client.
+llm: Optional[ChatOpenAI] = None
 
 
 # =============================================================================
-# Extraction System Prompts
+# EXTRACTION PROMPT
 # =============================================================================
 
-PARSER_SYSTEM_PROMPT = """You are an expert Indian land records and revenue documentation extraction engine (Bhulekh / Jamabandi / RoR / Sub-Registrar / Namantaran).
-Your mission is to parse unstructured text, OCR transcriptions, or typed Indian land records and extract high-fidelity structured entities strictly matching the target schema.
+PARSER_SYSTEM_PROMPT = """
+You are IntelliLandAI, an expert Indian land-record extraction engine.
 
-Follow these strict operational guidelines:
+Your job is to extract structured information from Indian land records,
+including:
 
-1. **Groundedness & Zero Hallucination**:
-   - Extract ONLY information explicitly present in the document.
-   - If an attribute (such as a Hindi name, order reference, or witness) is not mentioned or illegible in the text, set it to null / None.
-   - Do NOT extrapolate, invent, or assume details not grounded in the source text.
+- Record of Rights / RoR / Khatauni / Jamabandi
+- Mutation / Namantaran records
+- Registration / Sale Deeds
+- Legacy handwritten revenue records
 
-2. **Dates & Calendar Years (CRITICAL)**:
-   - Extract dates accurately (e.g. '22-Jul-2026', '14-Aug-2026', '15-Oct-1984', '12-May-2026').
-   - Return the EXACT textual date string as written in the record (e.g. '22-Jul-2026', '14-Aug-2026') or standard ISO format 'YYYY-MM-DD'.
-   - NEVER corrupt the calendar year (for instance, do NOT merge day '22' and year '2026' into '2226'; do NOT turn '14' and '2026' into '1414-08-20'; do NOT turn '1984' into '19884'). Double-check that the year is strictly accurate to the document.
+STRICT RULES:
 
-3. **Cadastral Numbers & Legal Identifiers**:
-   - Extract parcel numbers faithfully: Khasra number (e.g. '741/3', '589/2'), Khata number (e.g. '96/B', '142/A'), Survey number (e.g. 'SV-402'). Preserve slashes and sub-parcel notations.
-   - Extract official registration, mutation, or entry numbers (e.g. 'MUT-2026-88319', 'REG-2026-004812', 'LEGACY-1984/8892', 'ROR-2026-90812', 'REV-ORD/2026/0914').
+1. ZERO HALLUCINATION
+Only extract information explicitly present in the document text.
 
-4. **Land Area & Measurement Units**:
-   - Extract metric area in hectares (`land_area_hectares`) as a floating-point number (e.g. 1.85, 1.25). Strip unit labels like 'Ha', 'hectares'.
-   - Extract acre area (`land_area_acres`) as a floating-point number (e.g. 4.571, 3.088).
-   - Extract traditional vernacular area (`land_area_bigha`) as the exact string representation (e.g. '2 बीघा 4 बिस्वा').
+If a field is missing, unclear, illegible, or not present:
+- return null
+- never invent a value
+- never guess a number
+- never guess a person's name
+- never fabricate ULPIN
+- never fabricate survey/khasra numbers
 
-5. **Bilingual Fidelity (English and Devanagari Hindi)**:
-   - Indian land records commonly contain bilingual or Devanagari Hindi entries.
-   - For schemas with separate English and Hindi fields (Mutation, Handwritten, RoR):
-     Extract English text into English fields (`village_english`, `tehsil_english`, `district_english`, `owner_name_english`, etc.) and Devanagari Hindi into Hindi fields (`village_hindi`, `tehsil_hindi`, `district_hindi`, `owner_name_hindi`, etc.).
-   - If a standardized revenue term (such as land classification like 'कृषि भूमि (नहरी)' or 'कृषि भूमि (सिंचित / दोफसली)') appears only in Hindi, provide the corresponding standard English classification in `land_classification_english` (e.g. 'Agricultural Land (Canal Irrigated)' or 'Agricultural Land (Irrigated / Double-cropped)') along with the Hindi in `land_classification_hindi`.
-   - For Property Registration Sale Deeds (where fields like seller_name, buyer_name are combined):
-     Include both English and Hindi names in bilingual format as present in the document, e.g. 'Ramesh Chandra Verma (रमेश चंद्र वर्मा)'.
-   - If Hindi OCR contains minor font artifact noise (e.g. broken matras or glyph substitutions like 'काल्पɟनिक', 'वाɝरस', 'शमार्ष'), reconstruct or transcribe the clean Devanagari word ('काल्पनिक', 'वारिस', 'शर्मा') if clearly identifiable. If uncertain, transcribe as close to original as possible.
+2. RETURN JSON ONLY
 
-6. **Parties, Roles & Relations**:
-   - Differentiate clearly between:
-     * Previous owner / Transferor (पूर्व भू-स्वामी / मूल खातेदार / विक्रेता / seller)
-     * New owner / Transferee / Heir (नवीन भू-स्वामी / आवेदक / क्रेता / buyer / वारिस)
-     * Primary landholder / Khatadar (खातेदार / स्वामी)
-     * Father / Husband / Spouse names (पिता / पति का नाम).
-   - In bilingual tables (such as Mutation records showing both English and Hindi lines for names), be sure to extract the English line into `previous_owner_english` and `new_owner_english`, and the Devanagari line into `previous_owner_hindi` and `new_owner_hindi`.
-   - Capture transaction values (consideration value, stamp duty, annual revenue) and legal remarks accurately.
+Your response MUST contain exactly one JSON object.
+
+Do not return:
+- Markdown
+- ```json fences
+- explanations
+- comments
+- "User Safety"
+- safety messages
+- prose before or after JSON
+
+The first character of your useful response must be "{"
+and the final character must be "}".
+
+3. FIELD NAMES
+
+Use the exact field names supplied in the target schema.
+
+For location fields use:
+
+"district_english"
+"district_hindi"
+"tehsil_english"
+"tehsil_hindi"
+"village_english"
+"village_hindi"
+
+For cadastral identifiers use:
+
+"khasra_number"
+"khata_number"
+"survey_number"
+
+Do NOT create nested objects such as:
+
+"district": {
+    "english": "...",
+    "hindi": "..."
+}
+
+Instead return:
+
+"district_english": "...",
+"district_hindi": "..."
+
+4. DATES
+
+Preserve the date from the document accurately.
+
+Never corrupt the year.
+
+Examples:
+"12-May-2026"
+"2026-05-12"
+
+5. CADASTRAL IDENTIFIERS
+
+Preserve numbers exactly.
+
+Examples:
+"741/3"
+"589/2"
+"205/8"
+"SV-402"
+
+Do not remove slashes.
+
+6. REGISTRATION / SALE DEED IDENTIFIERS
+
+For Registration / Sale Deed documents, carefully distinguish between
+different cadastral identifiers.
+
+If a Survey Number is explicitly present in the document:
+- extract it into "survey_number"
+- preserve its exact value
+- preserve slashes, hyphens, letters, and suffixes
+- do not modify or normalize the identifier
+
+If a Khasra Number is explicitly present:
+- extract it into "khasra_number"
+- keep it separate from "survey_number"
+
+If both Survey Number and Khasra Number are present, populate both
+fields independently.
+
+Examples:
+
+"Survey No.: SV-402"
+→ "survey_number": "SV-402"
+
+"Khasra No.: 589/2"
+→ "khasra_number": "589/2"
+
+"Survey No.: SV-402, Khasra No.: 589/2"
+→ "survey_number": "SV-402"
+→ "khasra_number": "589/2"
+
+NEVER copy a Khasra Number into "survey_number".
+
+NEVER copy a Survey Number into "khasra_number".
+
+If the Survey Number is not explicitly present or cannot be reliably
+read, return null for "survey_number".
+
+6. LAND AREA
+
+Return numeric hectare/acre fields as numbers where possible.
+
+Example:
+1.25
+
+Do not write:
+"1.25 hectares"
+
+Traditional Bigha/Biswa can remain a string.
+
+7. HINDI
+
+Preserve Devanagari Hindi when available.
+
+8. BILINGUAL INFORMATION
+
+If both English and Hindi are present, populate both fields.
+
+9. DOCUMENT TYPE
+
+Use the appropriate record type based only on the document.
+
+10. REQUIRED FIELDS
+
+For required schema fields:
+- extract them from the document if explicitly present
+- do not invent or guess a value
+- if a required field is genuinely absent, return null
+- the application will flag the record for validation/review when the
+  returned value cannot satisfy the target schema
+
+The application will decide whether human verification is required.
 """
 
-PARSER_HUMAN_PROMPT = """Extract the structured land record information matching the schema from the following document text.
-Ensure all parcel numbers, areas, dates, and bilingual names are extracted faithfully:
-
-=== DOCUMENT TEXT ===
-{raw_text}
-"""
-
 
 # =============================================================================
-# Extraction Sanitization Helper
+# DOCUMENT LOADING
 # =============================================================================
 
-def sanitize_extracted_data(data: Dict[str, Any], raw_text: str) -> Dict[str, Any]:
+def load_document_text(
+    source: Union[str, Path]
+) -> Tuple[str, str]:
     """
-    Sanitizes extracted land record data dictionary:
-    - Fixes corrupted date years (e.g. '2226-07-22' or '1414-08-20' caused by day-year inversions)
-      by matching authentic dates in the raw source text.
-    - Strips inadvertent whitespace.
-    """
-    import re
-
-    date_fields = ["mutation_date", "registration_date", "record_date", "issue_date"]
-    for field in date_fields:
-        if field in data and data[field]:
-            s_val = str(data[field]).strip()
-            # Check for inverted or bogus ISO year like 1414-08-20 or 2226-07-22
-            iso_match = re.match(r"^(\d{4})-(\d{2})-(\d{2})$", s_val)
-            if iso_match:
-                year_int = int(iso_match.group(1))
-                if year_int < 1900 or year_int > 2050:
-                    # Look for date pattern in raw text: DD-Mon-YYYY or DD/MM/YYYY or DD-MM-YYYY
-                    text_dates = re.findall(
-                        r"\b(\d{1,2})[-/]([A-Za-z]{3}|\d{1,2})[-/](\d{4})\b",
-                        raw_text
-                    )
-                    if text_dates:
-                        # Match closest candidate
-                        matched_date = None
-                        for d_day, d_mon, d_yr in text_dates:
-                            if d_day.zfill(2) == iso_match.group(3) or d_yr[-2:] == iso_match.group(3):
-                                matched_date = f"{d_day}-{d_mon}-{d_yr}"
-                                break
-                        data[field] = matched_date or f"{text_dates[0][0]}-{text_dates[0][1]}-{text_dates[0][2]}"
-
-    return data
-
-
-# =============================================================================
-# Document Loading & Preprocessing
-# =============================================================================
-
-def load_document_text(source: Union[str, Path]) -> Tuple[str, str]:
-    """
-    Extracts text and identifies document stem from a PDF, text file, JSON, or raw string.
-
-    Args:
-        source: Filepath (str/Path) or raw text string.
+    Loads text from:
+    - PDF
+    - TXT
+    - JSON
+    - CSV
+    - image
+    - raw text
 
     Returns:
-        Tuple[str, str]: (extracted_raw_text, document_identifier_stem)
+        (raw_text, document_stem)
     """
+
     source_path = Path(source) if isinstance(source, (str, Path)) else None
     resolved_path: Optional[Path] = None
 
     if source_path:
-        # Check direct path, project root relative, or ai-service relative
         candidates = [
             source_path,
             PROJECT_ROOT / source_path,
             AI_SERVICE_DIR / source_path,
         ]
+
         for candidate in candidates:
             if candidate.is_file():
                 resolved_path = candidate
@@ -252,52 +385,141 @@ def load_document_text(source: Union[str, Path]) -> Tuple[str, str]:
         doc_stem = resolved_path.stem
         suffix = resolved_path.suffix.lower()
 
+        # ---------------------------------------------------------
+        # PDF
+        # ---------------------------------------------------------
+
         if suffix == ".pdf":
             try:
                 loader = PyMuPDFLoader(str(resolved_path))
                 pages = loader.load()
-                raw_text = "\n\n".join(p.page_content for p in pages)
-                return raw_text.strip(), doc_stem
-            except Exception:
-                import fitz
-                doc = fitz.open(str(resolved_path))
-                text_list = [page.get_text() for page in doc]
-                return "\n\n".join(text_list).strip(), doc_stem
 
-        elif suffix in (".txt", ".json", ".csv"):
-            with open(resolved_path, "r", encoding="utf-8") as f:
-                content = f.read()
+                raw_text = "\n\n".join(
+                    page.page_content
+                    for page in pages
+                )
+
+                raw_text = raw_text.strip()
+
+                if raw_text:
+                    return raw_text, doc_stem
+
+            except Exception:
+                pass
+
+            # Fallback to direct PyMuPDF
+            try:
+                import fitz
+
+                doc = fitz.open(str(resolved_path))
+
+                text_list = [
+                    page.get_text()
+                    for page in doc
+                ]
+
+                raw_text = "\n\n".join(text_list).strip()
+
+                return raw_text, doc_stem
+
+            except Exception as exc:
+                raise ValueError(
+                    f"Could not extract text from PDF "
+                    f"{resolved_path}: {exc}"
+                ) from exc
+
+        # ---------------------------------------------------------
+        # TXT / JSON / CSV
+        # ---------------------------------------------------------
+
+        if suffix in (".txt", ".json", ".csv"):
+            with open(
+                resolved_path,
+                "r",
+                encoding="utf-8"
+            ) as file:
+                content = file.read()
+
             if suffix == ".json":
                 try:
                     data = json.loads(content)
+
                     if isinstance(data, dict):
+
                         if "ocr" in data:
-                            return str(data["ocr"]).strip(), doc_stem
+                            return (
+                                str(data["ocr"]).strip(),
+                                doc_stem,
+                            )
+
                         if "raw_text" in data:
-                            return str(data["raw_text"]).strip(), doc_stem
+                            return (
+                                str(data["raw_text"]).strip(),
+                                doc_stem,
+                            )
+
                 except Exception:
                     pass
+
             return content.strip(), doc_stem
 
-        elif suffix in (".png", ".jpg", ".jpeg", ".webp", ".tiff"):
+        # ---------------------------------------------------------
+        # IMAGE
+        # ---------------------------------------------------------
+
+        if suffix in (
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".webp",
+            ".tiff",
+            ".bmp",
+        ):
             try:
                 from main import process_image
-                res = process_image(str(resolved_path))
-                return str(res.get("ocr", "")).strip(), doc_stem
-            except Exception as e:
-                raise ValueError(f"Could not extract text from image {resolved_path}: {e}")
 
-        else:
-            with open(resolved_path, "r", encoding="utf-8") as f:
-                return f.read().strip(), doc_stem
+                result = process_image(str(resolved_path))
 
-    # If not a file, treat source as raw text string directly
+                ocr_text = str(
+                    result.get("ocr", "")
+                ).strip()
+
+                return ocr_text, doc_stem
+
+            except Exception as exc:
+                raise ValueError(
+                    f"Could not extract OCR text from image "
+                    f"{resolved_path}: {exc}"
+                ) from exc
+
+        # ---------------------------------------------------------
+        # Generic text file
+        # ---------------------------------------------------------
+
+        try:
+            with open(
+                resolved_path,
+                "r",
+                encoding="utf-8"
+            ) as file:
+                return file.read().strip(), doc_stem
+
+        except Exception as exc:
+            raise ValueError(
+                f"Could not read document {resolved_path}: {exc}"
+            ) from exc
+
+    # -----------------------------------------------------------------
+    # Raw text input
+    # -----------------------------------------------------------------
+
     raw_str = str(source).strip()
+
     return raw_str, "extracted_document"
 
 
 # =============================================================================
-# Document Classification & Schema Resolution
+# DOCUMENT CLASSIFICATION
 # =============================================================================
 
 def detect_document_category_from_text(
@@ -305,162 +527,1429 @@ def detect_document_category_from_text(
     filename: str = "",
 ) -> DocumentCategory:
     """
-    Detects the land record category (MUTATION, REGISTRATION, HANDWRITTEN, ROR, or UNKNOWN)
-    by analyzing document headers, keyword patterns, and filename.
+    Detect document category from filename/header/text.
     """
-    combined = (filename + " " + text[:1200]).lower()
+
+    combined = (
+        filename + " " + text[:2000]
+    ).lower()
+
     full_lower = text.lower()
 
-    # 1. High-confidence header detection
-    # Mutation (नामांतरण आदेश / Namantaran Aadesh / Mutation Register)
-    if any(k in combined for k in [
-        "mutation", "namantaran", "नामांतरण", "वरासत", "उत्तराधिकार", "mutation no"
-    ]):
+    # Mutation
+    if any(
+        key in combined
+        for key in [
+            "mutation",
+            "namantaran",
+            "नामांतरण",
+            "वरासत",
+            "उत्तराधिकार",
+            "mutation no",
+        ]
+    ):
         return DocumentCategory.MUTATION
 
-    # Sub-Registrar Office Property Sale Deed (संपत्ति विक्रय विलेख)
-    if any(k in combined for k in [
-        "sub-registrar", "sale deed", "विक्रय विलेख", "उप-पंजीयक", "deed registration",
-        "consideration value", "stamp duty"
-    ]):
+    # Registration
+    if any(
+        key in combined
+        for key in [
+            "sub-registrar",
+            "sale deed",
+            "विक्रय विलेख",
+            "उप-पंजीयक",
+            "deed registration",
+            "consideration value",
+            "stamp duty",
+        ]
+    ):
         return DocumentCategory.REGISTRATION
 
-    # Legacy Handwritten Revenue Record (पुरातन राजस्व रजिस्टर प्रविष्टि)
-    if any(k in combined for k in [
-        "legacy revenue", "handwritten", "पुरातन राजस्व", "पुरातन भू-अभिलेख",
-        "भू-अभिलेख रजिस्टर", "bigha", "बीघा"
-    ]):
+    # Handwritten / Legacy
+    if any(
+        key in combined
+        for key in [
+            "legacy revenue",
+            "handwritten",
+            "पुरातन राजस्व",
+            "पुरातन भू-अभिलेख",
+            "भू-अभिलेख रजिस्टर",
+            "bigha",
+            "बीघा",
+        ]
+    ):
         return DocumentCategory.HANDWRITTEN
 
-    # Record of Rights / Khatauni / Jamabandi (अधिकार अभिलेख / खतौनी)
-    if any(k in combined for k in [
-        "record of rights", "khatauni", "खतौनी", "अधिकार अभिलेख", "jamabandi",
-        "जमाबंदी", "प्रपत्र 10", "form 10"
-    ]):
+    # RoR
+    if any(
+        key in combined
+        for key in [
+            "record of rights",
+            "khatauni",
+            "खतौनी",
+            "अधिकार अभिलेख",
+            "jamabandi",
+            "जमाबंदी",
+            "प्रपत्र 10",
+            "form 10",
+        ]
+    ):
         return DocumentCategory.ROR
 
-    # 2. Broader text scan fallbacks
-    if "mutation" in full_lower or "नामांतरण" in full_lower:
+    # Broader fallback
+    if (
+        "mutation" in full_lower
+        or "नामांतरण" in full_lower
+    ):
         return DocumentCategory.MUTATION
-    if "sale deed" in full_lower or "विक्रय विलेख" in full_lower or "sub-registrar" in full_lower:
+
+    if (
+        "sale deed" in full_lower
+        or "विक्रय विलेख" in full_lower
+        or "sub-registrar" in full_lower
+    ):
         return DocumentCategory.REGISTRATION
-    if "khatauni" in full_lower or "खतौनी" in full_lower or "record of rights" in full_lower:
+
+    if (
+        "khatauni" in full_lower
+        or "खतौनी" in full_lower
+        or "record of rights" in full_lower
+        or "jamabandi" in full_lower
+    ):
         return DocumentCategory.ROR
-    if "legacy" in full_lower or "पुरातन" in full_lower or "bigha" in full_lower or "बीघा" in full_lower:
+
+    if (
+        "legacy" in full_lower
+        or "पुरातन" in full_lower
+        or "bigha" in full_lower
+        or "बीघा" in full_lower
+    ):
         return DocumentCategory.HANDWRITTEN
 
     return DocumentCategory.UNKNOWN
 
 
+# =============================================================================
+# SCHEMA RESOLUTION
+# =============================================================================
+
 def resolve_schema(
-    schema_type: Union[str, Type[BaseModel], DocumentCategory, None],
+    schema_type: Union[
+        str,
+        Type[BaseModel],
+        DocumentCategory,
+        None,
+    ],
     raw_text: str = "",
     filename: str = "",
-) -> Tuple[Type[BaseModel], DocumentCategory]:
-    """
-    Resolves the target Pydantic schema model and DocumentCategory.
-    If schema_type is 'auto' or None, automatically detects from text and filename.
-    """
-    if isinstance(schema_type, type) and issubclass(schema_type, BaseModel):
+) -> Tuple[
+    Type[BaseModel],
+    DocumentCategory,
+]:
+
+    if (
+        isinstance(schema_type, type)
+        and issubclass(schema_type, BaseModel)
+    ):
         category = DocumentCategory.UNKNOWN
-        for cat, s_cls in SCHEMA_REGISTRY.items():
-            if s_cls == schema_type:
+
+        for cat, schema_cls in SCHEMA_REGISTRY.items():
+            if schema_cls == schema_type:
                 category = cat
                 break
+
         return schema_type, category
 
     if isinstance(schema_type, DocumentCategory):
-        return SCHEMA_REGISTRY.get(schema_type, UnifiedLandRecordSchema), schema_type
+        return (
+            SCHEMA_REGISTRY.get(
+                schema_type,
+                UnifiedLandRecordSchema,
+            ),
+            schema_type,
+        )
 
     if isinstance(schema_type, str):
-        cleaned_key = schema_type.strip().lower()
-        if cleaned_key in SCHEMA_ALIAS_MAP:
-            target_cls = SCHEMA_ALIAS_MAP[cleaned_key]
-            for cat, s_cls in SCHEMA_REGISTRY.items():
-                if s_cls == target_cls:
-                    return target_cls, cat
-            return target_cls, DocumentCategory.UNKNOWN
-        if cleaned_key != "auto":
-            for cat in DocumentCategory:
-                if cat.value.lower() == cleaned_key:
-                    return SCHEMA_REGISTRY[cat], cat
 
-    # Auto-detection
-    detected_cat = detect_document_category_from_text(raw_text, filename)
-    target_schema = SCHEMA_REGISTRY.get(detected_cat, UnifiedLandRecordSchema)
-    return target_schema, detected_cat
+        cleaned_key = schema_type.strip().lower()
+
+        if cleaned_key in SCHEMA_ALIAS_MAP:
+
+            target_cls = SCHEMA_ALIAS_MAP[cleaned_key]
+
+            for cat, schema_cls in SCHEMA_REGISTRY.items():
+
+                if schema_cls == target_cls:
+                    return target_cls, cat
+
+            return (
+                target_cls,
+                DocumentCategory.UNKNOWN,
+            )
+
+        if cleaned_key != "auto":
+
+            for cat in DocumentCategory:
+
+                if (
+                    cat.value.lower()
+                    == cleaned_key
+                ):
+                    return (
+                        SCHEMA_REGISTRY[cat],
+                        cat,
+                    )
+
+    # Auto detection
+    detected_category = (
+        detect_document_category_from_text(
+            raw_text,
+            filename,
+        )
+    )
+
+    target_schema = SCHEMA_REGISTRY.get(
+        detected_category,
+        UnifiedLandRecordSchema,
+    )
+
+    return target_schema, detected_category
 
 
 # =============================================================================
-# Core Parser Functions
+# JSON EXTRACTION HELPERS
+# =============================================================================
+
+def _content_to_text(content: Any) -> str:
+    """
+    Converts different LangChain/OpenAI response content formats
+    into plain text.
+    """
+
+    if content is None:
+        return ""
+
+    if isinstance(content, str):
+        return content
+
+    if isinstance(content, list):
+
+        parts: List[str] = []
+
+        for item in content:
+
+            if isinstance(item, str):
+                parts.append(item)
+                continue
+
+            if isinstance(item, dict):
+
+                text = item.get("text")
+
+                if text is not None:
+                    parts.append(str(text))
+
+                continue
+
+            parts.append(str(item))
+
+        return "\n".join(parts)
+
+    if isinstance(content, dict):
+
+        if "text" in content:
+            return str(content["text"])
+
+        return json.dumps(
+            content,
+            ensure_ascii=False,
+        )
+
+    return str(content)
+
+
+def _remove_safety_prefixes(text: str) -> str:
+    """
+    Removes harmless provider/model wrapper text such as:
+
+    User Safety: safe
+
+    without modifying actual JSON content.
+    """
+
+    cleaned = text.strip()
+
+    # Remove common provider safety line only when it occurs
+    # before the JSON object.
+    cleaned = re.sub(
+        r"^\s*User\s+Safety\s*:\s*[^\n]*\n?",
+        "",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+
+    cleaned = re.sub(
+        r"^\s*Safety\s*:\s*[^\n]*\n?",
+        "",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+
+    return cleaned.strip()
+
+
+def _strip_markdown_fences(text: str) -> str:
+    """
+    Removes markdown JSON fences if the model ignores the
+    JSON-only instruction.
+    """
+
+    cleaned = text.strip()
+
+    if cleaned.startswith("```"):
+
+        cleaned = re.sub(
+            r"^```(?:json)?\s*",
+            "",
+            cleaned,
+            flags=re.IGNORECASE,
+        )
+
+        cleaned = re.sub(
+            r"\s*```$",
+            "",
+            cleaned,
+        )
+
+    return cleaned.strip()
+
+
+def _extract_balanced_json_object(
+    text: str,
+) -> Optional[str]:
+    """
+    Finds the first balanced JSON object.
+
+    Handles braces inside quoted strings correctly.
+    """
+
+    start = text.find("{")
+
+    if start == -1:
+        return None
+
+    depth = 0
+    in_string = False
+    escaped = False
+
+    for index in range(start, len(text)):
+
+        char = text[index]
+
+        if in_string:
+
+            if escaped:
+                escaped = False
+                continue
+
+            if char == "\\":
+                escaped = True
+                continue
+
+            if char == '"':
+                in_string = False
+
+            continue
+
+        if char == '"':
+            in_string = True
+            continue
+
+        if char == "{":
+            depth += 1
+
+        elif char == "}":
+
+            depth -= 1
+
+            if depth == 0:
+                return text[start:index + 1]
+
+    return None
+
+
+def extract_json_from_llm_response(
+    response: Any,
+) -> Dict[str, Any]:
+    """
+    Converts an LLM response into a Python dictionary.
+
+    Supports:
+    - AIMessage
+    - plain string
+    - dict
+    - list content blocks
+    - markdown fenced JSON
+    - provider safety prefixes
+    """
+
+    # ---------------------------------------------------------
+    # Direct dictionary
+    # ---------------------------------------------------------
+
+    if isinstance(response, dict):
+        return response
+
+    # ---------------------------------------------------------
+    # LangChain AIMessage
+    # ---------------------------------------------------------
+
+    content = getattr(
+        response,
+        "content",
+        response,
+    )
+
+    text = _content_to_text(content)
+
+    if not text.strip():
+        raise ValueError(
+            "OpenRouter returned an empty response."
+        )
+
+    text = _remove_safety_prefixes(text)
+    text = _strip_markdown_fences(text)
+
+    # ---------------------------------------------------------
+    # Direct JSON
+    # ---------------------------------------------------------
+
+    try:
+        parsed = json.loads(text)
+
+        if isinstance(parsed, dict):
+            return parsed
+
+    except json.JSONDecodeError:
+        pass
+
+    # ---------------------------------------------------------
+    # Extract balanced JSON object
+    # ---------------------------------------------------------
+
+    json_text = _extract_balanced_json_object(text)
+
+    if json_text:
+
+        try:
+            parsed = json.loads(json_text)
+
+            if isinstance(parsed, dict):
+                return parsed
+
+        except json.JSONDecodeError:
+            pass
+
+    preview = text[:1000].replace("\n", "\\n")
+
+    raise ValueError(
+        "OpenRouter did not return a valid JSON object. "
+        f"Response preview: {preview}"
+    )
+
+
+# =============================================================================
+# NORMALIZATION HELPERS
+# =============================================================================
+
+def _first_value(
+    data: Dict[str, Any],
+    keys: List[str],
+) -> Any:
+    """
+    Returns the first non-empty value from a list of possible keys.
+    """
+
+    for key in keys:
+
+        if key not in data:
+            continue
+
+        value = data.get(key)
+
+        if value is None:
+            continue
+
+        if isinstance(value, str) and not value.strip():
+            continue
+
+        return value
+
+    return None
+
+
+def _nested_language_value(
+    value: Any,
+    language: str,
+) -> Any:
+    """
+    Extracts English/Hindi value from an object such as:
+
+    {
+        "english": "...",
+        "hindi": "..."
+    }
+    """
+
+    if not isinstance(value, dict):
+        return None
+
+    aliases = {
+        "english": [
+            "english",
+            "en",
+            "eng",
+            "value_english",
+        ],
+        "hindi": [
+            "hindi",
+            "hi",
+            "devanagari",
+            "value_hindi",
+        ],
+    }
+
+    for key in aliases.get(language, []):
+
+        if key in value:
+
+            result = value[key]
+
+            if result is not None:
+                return result
+
+    return None
+
+
+def _normalize_location_field(
+    data: Dict[str, Any],
+    base_name: str,
+) -> None:
+    """
+    Converts nested location structures into the exact schema fields.
+
+    Example:
+
+        district: {
+            english: "Rampur",
+            hindi: "रामपुर"
+        }
+
+    becomes:
+
+        district_english: "Rampur"
+        district_hindi: "रामपुर"
+    """
+
+    nested = data.get(base_name)
+
+    if isinstance(nested, dict):
+
+        english = _nested_language_value(
+            nested,
+            "english",
+        )
+
+        hindi = _nested_language_value(
+            nested,
+            "hindi",
+        )
+
+        if (
+            english is not None
+            and not data.get(
+                f"{base_name}_english"
+            )
+        ):
+            data[f"{base_name}_english"] = english
+
+        if (
+            hindi is not None
+            and not data.get(
+                f"{base_name}_hindi"
+            )
+        ):
+            data[f"{base_name}_hindi"] = hindi
+
+        # Remove nested version because it is not part
+        # of the Pydantic schema.
+        data.pop(base_name, None)
+
+    elif nested is not None:
+
+        # If model returns a plain value for the location,
+        # treat it as English only.
+        english_key = f"{base_name}_english"
+
+        if not data.get(english_key):
+            data[english_key] = nested
+
+        data.pop(base_name, None)
+
+
+def normalize_extracted_data(
+    data: Dict[str, Any],
+) -> Dict[str, Any]:
+    """
+    Normalizes common LLM-generated field variations to the exact
+    schema.py field names.
+
+    IMPORTANT:
+    This function NEVER invents values.
+
+    It only renames or unwraps information already returned by
+    the model.
+    """
+
+    if not isinstance(data, dict):
+        raise ValueError(
+            "Extracted AI result must be a JSON object."
+        )
+
+    normalized = dict(data)
+
+    # ---------------------------------------------------------
+    # Location fields
+    # ---------------------------------------------------------
+
+    _normalize_location_field(
+        normalized,
+        "district",
+    )
+
+    _normalize_location_field(
+        normalized,
+        "tehsil",
+    )
+
+    _normalize_location_field(
+        normalized,
+        "village",
+    )
+
+    # ---------------------------------------------------------
+    # Direct location aliases
+    # ---------------------------------------------------------
+
+    location_aliases = {
+        "district_english": [
+            "district_english",
+            "districtEnglish",
+            "district_name_english",
+            "district_name",
+            "district_en",
+        ],
+        "district_hindi": [
+            "district_hindi",
+            "districtHindi",
+            "district_name_hindi",
+            "district_hi",
+        ],
+        "tehsil_english": [
+            "tehsil_english",
+            "tehsilEnglish",
+            "tehsil_name_english",
+            "tehsil_name",
+            "tehsil_en",
+        ],
+        "tehsil_hindi": [
+            "tehsil_hindi",
+            "tehsilHindi",
+            "tehsil_name_hindi",
+            "tehsil_hi",
+        ],
+        "village_english": [
+            "village_english",
+            "villageEnglish",
+            "village_name_english",
+            "village_name",
+            "village_en",
+        ],
+        "village_hindi": [
+            "village_hindi",
+            "villageHindi",
+            "village_name_hindi",
+            "village_hi",
+        ],
+    }
+
+    for target_key, aliases in location_aliases.items():
+
+        if normalized.get(target_key):
+            continue
+
+        value = _first_value(
+            normalized,
+            aliases,
+        )
+
+        if value is not None:
+            normalized[target_key] = value
+
+    # ---------------------------------------------------------
+    # Khasra
+    # ---------------------------------------------------------
+
+    if not normalized.get("khasra_number"):
+
+        value = _first_value(
+            normalized,
+            [
+                "khasra_number",
+                "khasra",
+                "khasra_no",
+                "khasraNo",
+                "plot_number",
+                "plot_no",
+                "parcel_number",
+            ],
+        )
+
+        if value is not None:
+            normalized["khasra_number"] = value
+
+    # ---------------------------------------------------------
+    # Khata
+    # ---------------------------------------------------------
+
+    if not normalized.get("khata_number"):
+
+        value = _first_value(
+            normalized,
+            [
+                "khata_number",
+                "khata",
+                "khata_no",
+                "khataNo",
+                "khewat_number",
+            ],
+        )
+
+        if value is not None:
+            normalized["khata_number"] = value
+
+    # ---------------------------------------------------------
+    # Survey
+    # ---------------------------------------------------------
+
+    if not normalized.get("survey_number"):
+
+        value = _first_value(
+            normalized,
+            [
+                "survey_number",
+                "survey",
+                "survey_no",
+                "surveyNo",
+                "survey_id",
+            ],
+        )
+
+        if value is not None:
+            normalized["survey_number"] = value
+
+    # ---------------------------------------------------------
+    # Document type
+    # ---------------------------------------------------------
+
+    if not normalized.get("document_type"):
+
+        value = _first_value(
+            normalized,
+            [
+                "document_type",
+                "record_type",
+                "document_category",
+                "type",
+            ],
+        )
+
+        if value is not None:
+            normalized["document_type"] = value
+
+    # ---------------------------------------------------------
+    # ROR record number
+    # ---------------------------------------------------------
+
+    if not normalized.get("record_entry_number"):
+
+        value = _first_value(
+            normalized,
+            [
+                "record_entry_number",
+                "record_number",
+                "entry_number",
+                "ror_number",
+                "ror_entry_number",
+            ],
+        )
+
+        if value is not None:
+            normalized["record_entry_number"] = value
+
+    # ---------------------------------------------------------
+    # Owner aliases
+    # ---------------------------------------------------------
+
+    if not normalized.get("owner_name_english"):
+
+        value = _first_value(
+            normalized,
+            [
+                "owner_name_english",
+                "owner_english",
+                "owner_name",
+                "landowner_name",
+            ],
+        )
+
+        if isinstance(value, dict):
+            value = _nested_language_value(
+                value,
+                "english",
+            )
+
+        if value is not None:
+            normalized["owner_name_english"] = value
+
+    if not normalized.get("owner_name_hindi"):
+
+        value = _first_value(
+            normalized,
+            [
+                "owner_name_hindi",
+                "owner_hindi",
+                "landowner_name_hindi",
+            ],
+        )
+
+        if isinstance(value, dict):
+            value = _nested_language_value(
+                value,
+                "hindi",
+            )
+
+        if value is not None:
+            normalized["owner_name_hindi"] = value
+
+    # ---------------------------------------------------------
+    # Father / husband aliases
+    # ---------------------------------------------------------
+
+    if not normalized.get(
+        "father_husband_name_english"
+    ):
+
+        value = _first_value(
+            normalized,
+            [
+                "father_husband_name_english",
+                "father_name_english",
+                "father_name",
+                "father_husband_name",
+            ],
+        )
+
+        if isinstance(value, dict):
+            value = _nested_language_value(
+                value,
+                "english",
+            )
+
+        if value is not None:
+            normalized[
+                "father_husband_name_english"
+            ] = value
+
+    if not normalized.get(
+        "father_husband_name_hindi"
+    ):
+
+        value = _first_value(
+            normalized,
+            [
+                "father_husband_name_hindi",
+                "father_name_hindi",
+                "father_husband_hindi",
+            ],
+        )
+
+        if isinstance(value, dict):
+            value = _nested_language_value(
+                value,
+                "hindi",
+            )
+
+        if value is not None:
+            normalized[
+                "father_husband_name_hindi"
+            ] = value
+
+    # ---------------------------------------------------------
+    # Nested parcel / khasra records
+    # ---------------------------------------------------------
+    # Some OpenRouter models naturally return cadastral data as:
+    #
+    #   "parcels": [{
+    #       "khasra_number": "589/2",
+    #       "area_hectares": 1.25,
+    #       ...
+    #   }]
+    #
+    # The application schema is intentionally flat for the primary
+    # land-record row. Unwrap the FIRST parcel only when the flat field
+    # is missing. Never invent or merge values that are not present.
+    parcels = normalized.get("parcels")
+    if isinstance(parcels, list) and parcels:
+        first_parcel = parcels[0]
+
+        if isinstance(first_parcel, dict):
+            parcel_aliases = {
+                "khasra_number": [
+                    "khasra_number", "khasra", "khasra_no",
+                    "khasraNo", "plot_number", "plot_no",
+                    "parcel_number",
+                ],
+                "survey_number": [
+                    "survey_number", "survey", "survey_no",
+                    "surveyNo", "survey_id",
+                ],
+                "land_area_hectares": [
+                    "land_area_hectares", "area_hectares",
+                    "hectares", "area_ha",
+                ],
+                "land_area_acres": [
+                    "land_area_acres", "area_acres",
+                    "acres", "area_in_acres",
+                ],
+                "land_classification_english": [
+                    "land_classification_english",
+                    "classification_english",
+                    "land_classification", "classification",
+                ],
+                "land_classification_hindi": [
+                    "land_classification_hindi",
+                    "classification_hindi",
+                ],
+                "ownership_share": [
+                    "ownership_share", "share", "share_ratio",
+                    "ownership_ratio",
+                ],
+            }
+
+            for target_key, aliases in parcel_aliases.items():
+                if normalized.get(target_key) not in (None, ""):
+                    continue
+
+                value = _first_value(first_parcel, aliases)
+
+                if isinstance(value, dict):
+                    language = (
+                        "hindi"
+                        if target_key.endswith("_hindi")
+                        else "english"
+                    )
+                    value = _nested_language_value(value, language)
+
+                if value is not None:
+                    normalized[target_key] = value
+
+    # ---------------------------------------------------------
+    # Area aliases
+    # ---------------------------------------------------------
+
+    area_aliases = {
+        "land_area_hectares": [
+            "land_area_hectares",
+            "area_hectares",
+            "hectares",
+            "area_ha",
+        ],
+        "land_area_acres": [
+            "land_area_acres",
+            "area_acres",
+            "acres",
+            "area_in_acres",
+        ],
+    }
+
+    for target_key, aliases in area_aliases.items():
+
+        if normalized.get(target_key) is not None:
+            continue
+
+        value = _first_value(
+            normalized,
+            aliases,
+        )
+
+        if value is not None:
+            normalized[target_key] = (
+                parse_numeric_area(value)
+            )
+
+    # ---------------------------------------------------------
+    # Classification aliases
+    # ---------------------------------------------------------
+
+    if not normalized.get(
+        "land_classification_english"
+    ):
+
+        value = _first_value(
+            normalized,
+            [
+                "land_classification_english",
+                "classification_english",
+                "land_classification",
+                "classification",
+            ],
+        )
+
+        if isinstance(value, dict):
+            value = _nested_language_value(
+                value,
+                "english",
+            )
+
+        if value is not None:
+            normalized[
+                "land_classification_english"
+            ] = value
+
+    if not normalized.get(
+        "land_classification_hindi"
+    ):
+
+        value = _first_value(
+            normalized,
+            [
+                "land_classification_hindi",
+                "classification_hindi",
+            ],
+        )
+
+        if isinstance(value, dict):
+            value = _nested_language_value(
+                value,
+                "hindi",
+            )
+
+        if value is not None:
+            normalized[
+                "land_classification_hindi"
+            ] = value
+
+    # ---------------------------------------------------------
+    # Ownership share aliases
+    # ---------------------------------------------------------
+
+    if not normalized.get("ownership_share"):
+
+        value = _first_value(
+            normalized,
+            [
+                "ownership_share",
+                "share",
+                "share_ratio",
+                "ownership_ratio",
+            ],
+        )
+
+        if value is not None:
+            normalized["ownership_share"] = value
+
+    # ---------------------------------------------------------
+    # Annual revenue aliases
+    # ---------------------------------------------------------
+
+    if not normalized.get(
+        "annual_revenue_inr"
+    ):
+
+        value = _first_value(
+            normalized,
+            [
+                "annual_revenue_inr",
+                "annual_revenue",
+                "land_revenue",
+                "revenue",
+            ],
+        )
+
+        if value is not None:
+            normalized[
+                "annual_revenue_inr"
+            ] = value
+
+    return normalized
+
+
+# =============================================================================
+# SANITIZATION
+# =============================================================================
+
+def sanitize_extracted_data(
+    data: Dict[str, Any],
+    raw_text: str,
+) -> Dict[str, Any]:
+    """
+    Sanitizes extracted values while preserving source-grounded data.
+    """
+
+    import re
+
+    date_fields = [
+        "mutation_date",
+        "registration_date",
+        "record_date",
+        "issue_date",
+    ]
+
+    for field in date_fields:
+
+        if field not in data:
+            continue
+
+        if not data[field]:
+            continue
+
+        value = str(data[field]).strip()
+
+        # Detect malformed ISO years.
+        iso_match = re.match(
+            r"^(\d{4})-(\d{2})-(\d{2})$",
+            value,
+        )
+
+        if iso_match:
+
+            year_int = int(
+                iso_match.group(1)
+            )
+
+            if (
+                year_int < 1900
+                or year_int > 2050
+            ):
+
+                text_dates = re.findall(
+                    r"\b"
+                    r"(\d{1,2})"
+                    r"[-/]"
+                    r"([A-Za-z]{3}|\d{1,2})"
+                    r"[-/]"
+                    r"(\d{4})"
+                    r"\b",
+                    raw_text,
+                )
+
+                if text_dates:
+
+                    matched_date = None
+
+                    for (
+                        day,
+                        month,
+                        year,
+                    ) in text_dates:
+
+                        if (
+                            day.zfill(2)
+                            == iso_match.group(3)
+                        ):
+                            matched_date = (
+                                f"{day}-{month}-{year}"
+                            )
+                            break
+
+                    if matched_date:
+                        data[field] = matched_date
+                    else:
+                        data[field] = (
+                            f"{text_dates[0][0]}-"
+                            f"{text_dates[0][1]}-"
+                            f"{text_dates[0][2]}"
+                        )
+
+        # Strip accidental whitespace.
+        if isinstance(data[field], str):
+            data[field] = data[field].strip()
+
+    return data
+
+
+# =============================================================================
+# VALIDATION AGAINST TARGET SCHEMA
+# =============================================================================
+
+def validate_against_schema(
+    data: Dict[str, Any],
+    target_schema: Type[BaseModel],
+) -> BaseModel:
+    """
+    Normalizes and validates AI output against the target Pydantic schema.
+    """
+
+    normalized = normalize_extracted_data(data)
+
+    try:
+        model = target_schema.model_validate(
+            normalized
+        )
+
+        return model
+
+    except Exception as exc:
+
+        # Print normalized payload for debugging.
+        print(
+            "\n[AI DEBUG] Normalized extraction:\n"
+            + json.dumps(
+                normalized,
+                ensure_ascii=False,
+                indent=2,
+            ),
+            file=sys.stderr,
+        )
+
+        raise ValueError(
+            "Extracted JSON is valid, but it does not "
+            f"match the {target_schema.__name__} schema: "
+            f"{exc}"
+        ) from exc
+
+
+# =============================================================================
+# CORE DOCUMENT PARSER
 # =============================================================================
 
 def parse_document(
     document_source: Union[str, Path],
-    schema_type: Union[str, Type[BaseModel], DocumentCategory, None] = "auto",
-    llm: Optional[ChatGoogleGenerativeAI] = None,
-) -> Tuple[BaseModel, DocumentCategory, str]:
+    schema_type: Union[
+        str,
+        Type[BaseModel],
+        DocumentCategory,
+        None,
+    ] = "auto",
+    llm: Optional[ChatOpenAI] = None,
+) -> Tuple[
+    BaseModel,
+    DocumentCategory,
+    str,
+]:
     """
-    Parses any land document (PDF, TXT, JSON, or raw string) using the Gemini LLM
-    and extracts structured entities matching the appropriate schema from schema.py.
-
-    Args:
-        document_source: Filepath or raw text string of the land record document.
-        schema_type: 'auto', schema name ('mutation', 'registration', 'handwritten', 'ror', 'unified'),
-                     DocumentCategory enum, or Pydantic schema class.
-        llm: Optional ChatGoogleGenerativeAI instance. Defaults to configured Gemini instance.
-
-    Returns:
-        Tuple[BaseModel, DocumentCategory, str]: (extracted_pydantic_model, category, doc_stem)
+    Parses a land document using OpenRouter and validates the
+    result using the appropriate Pydantic schema.
     """
-    raw_text, doc_stem = load_document_text(document_source)
+
+    # ---------------------------------------------------------
+    # 1. Load document
+    # ---------------------------------------------------------
+
+    raw_text, doc_stem = load_document_text(
+        document_source
+    )
+
     if not raw_text:
-        raise ValueError(f"No text could be extracted from document source: {document_source}")
+        raise ValueError(
+            "No text could be extracted from "
+            f"document source: {document_source}"
+        )
 
-    target_schema, category = resolve_schema(schema_type, raw_text=raw_text, filename=doc_stem)
+    # ---------------------------------------------------------
+    # 2. Resolve schema
+    # ---------------------------------------------------------
+
+    target_schema, category = resolve_schema(
+        schema_type,
+        raw_text=raw_text,
+        filename=doc_stem,
+    )
+
+    # ---------------------------------------------------------
+    # 3. LLM
+    # ---------------------------------------------------------
 
     if llm is None:
         llm = get_llm()
 
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", PARSER_SYSTEM_PROMPT),
-        ("human", PARSER_HUMAN_PROMPT),
-    ])
+    # ---------------------------------------------------------
+    # 4. Generate schema field description
+    # ---------------------------------------------------------
 
-    structured_chain = prompt | llm.with_structured_output(target_schema)
-    extracted_model = structured_chain.invoke({"raw_text": raw_text})
-
-    # Sanitize dates and format irregularities using raw document context
-    sanitized_dict = sanitize_extracted_data(extracted_model.model_dump(), raw_text)
     try:
-        extracted_model = target_schema.model_validate(sanitized_dict)
+        schema_json = target_schema.model_json_schema()
+
+        schema_text = json.dumps(
+            schema_json,
+            ensure_ascii=False,
+            indent=2,
+        )
+
     except Exception:
-        pass
+        schema_text = "{}"
 
-    return extracted_model, category, doc_stem
+    # ---------------------------------------------------------
+    # 5. Build plain prompt
+    #
+    # IMPORTANT:
+    # We intentionally DO NOT use ChatPromptTemplate here.
+    # This avoids LangChain interpreting JSON braces as variables.
+    # ---------------------------------------------------------
 
+    prompt = f"""
+{PARSER_SYSTEM_PROMPT}
+
+TARGET DOCUMENT CATEGORY:
+{category.value}
+
+TARGET PYDANTIC SCHEMA:
+{schema_text}
+
+DOCUMENT TEXT:
+-------------------------
+{raw_text}
+-------------------------
+
+Now extract the document.
+
+Return exactly one JSON object.
+
+Do not include Markdown.
+Do not include ```json.
+Do not include explanations.
+Do not include safety messages.
+Do not include "User Safety".
+
+Use exact schema field names whenever possible.
+
+If the model internally represents a location as:
+district -> english/hindi
+tehsil -> english/hindi
+village -> english/hindi
+
+the final response MUST still use:
+district_english
+district_hindi
+tehsil_english
+tehsil_hindi
+village_english
+village_hindi
+
+For missing information use null.
+
+For cadastral records containing multiple parcel/plot entries, preserve
+the parcel array if useful, but ALSO populate the flat primary fields
+required by the target schema from the relevant parcel entry:
+"khasra_number", "land_area_hectares", "land_area_acres",
+"land_classification_english", "land_classification_hindi",
+"ownership_share", and "survey_number" when present.
+
+Do not create values that are not present in the document.
+
+Return JSON only.
+"""
+
+    # ---------------------------------------------------------
+    # 6. Call OpenRouter
+    # ---------------------------------------------------------
+
+    try:
+
+        response = llm.invoke(prompt)
+
+    except Exception as exc:
+
+        raise RuntimeError(
+            "OpenRouter extraction request failed: "
+            f"{exc}"
+        ) from exc
+
+    # ---------------------------------------------------------
+    # 7. Extract JSON
+    # ---------------------------------------------------------
+
+    try:
+
+        extracted_dict = (
+            extract_json_from_llm_response(
+                response
+            )
+        )
+
+    except Exception as exc:
+
+        raise ValueError(
+            "OpenRouter returned unprocessable "
+            f"content: {exc}"
+        ) from exc
+
+    # ---------------------------------------------------------
+    # 8. Normalize aliases / nested fields
+    # ---------------------------------------------------------
+
+    extracted_dict = normalize_extracted_data(
+        extracted_dict
+    )
+
+    # ---------------------------------------------------------
+    # 9. Sanitize
+    # ---------------------------------------------------------
+
+    extracted_dict = sanitize_extracted_data(
+        extracted_dict,
+        raw_text,
+    )
+
+    # ---------------------------------------------------------
+    # 10. Validate with Pydantic
+    # ---------------------------------------------------------
+
+    extracted_model = validate_against_schema(
+        extracted_dict,
+        target_schema,
+    )
+
+    return (
+        extracted_model,
+        category,
+        doc_stem,
+    )
+
+
+# =============================================================================
+# SAVE PARSED RESULT
+# =============================================================================
 
 def parse_and_save(
     document_source: Union[str, Path],
-    output_dir: Union[str, Path] = "ai-service/trial_op_data",
-    schema_type: Union[str, Type[BaseModel], DocumentCategory, None] = "auto",
-    llm: Optional[ChatGoogleGenerativeAI] = None,
+    output_dir: Union[str, Path] = (
+        "ai-service/trial_op_data"
+    ),
+    schema_type: Union[
+        str,
+        Type[BaseModel],
+        DocumentCategory,
+        None,
+    ] = "auto",
+    llm: Optional[ChatOpenAI] = None,
     custom_filename: Optional[str] = None,
 ) -> Tuple[BaseModel, Path]:
     """
-    Parses any land document, extracts structured data according to the schema,
-    and stores the resulting JSON in trial_op_data with UTF-8 encoding.
-
-    Args:
-        document_source: Path to document or raw text.
-        output_dir: Directory where trial output JSON will be stored.
-        schema_type: Schema selection ('auto', specific schema name, or class).
-        llm: Optional ChatGoogleGenerativeAI instance.
-        custom_filename: Optional explicit output file name.
-
-    Returns:
-        Tuple[BaseModel, Path]: (parsed_model, output_file_path)
+    Parses a document and saves the extracted JSON.
     """
+
     model, category, doc_stem = parse_document(
         document_source=document_source,
         schema_type=schema_type,
@@ -469,121 +1958,262 @@ def parse_and_save(
 
     # Resolve output directory
     out_path = Path(output_dir)
+
     if not out_path.is_absolute():
-        if (PROJECT_ROOT / out_path).parent.exists():
-            out_path = PROJECT_ROOT / out_path
-        elif (AI_SERVICE_DIR / out_path).parent.exists():
-            out_path = AI_SERVICE_DIR / out_path
+
+        project_candidate = (
+            PROJECT_ROOT / out_path
+        )
+
+        ai_candidate = (
+            AI_SERVICE_DIR / out_path
+        )
+
+        if project_candidate.parent.exists():
+            out_path = project_candidate
+
+        elif ai_candidate.parent.exists():
+            out_path = ai_candidate
+
         else:
-            out_path = AI_SERVICE_DIR / "trial_op_data"
+            out_path = (
+                AI_SERVICE_DIR
+                / "trial_op_data"
+            )
 
-    out_path.mkdir(parents=True, exist_ok=True)
+    out_path.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
 
-    filename = custom_filename or f"{doc_stem}_op.json"
+    filename = (
+        custom_filename
+        or f"{doc_stem}_op.json"
+    )
+
     target_file = out_path / filename
 
-    # Format JSON with proper indentation and UTF-8 characters
-    data_dict = model.model_dump(mode="json")
-    json_content = json.dumps(data_dict, ensure_ascii=False, indent=2)
+    data_dict = model.model_dump(
+        mode="json"
+    )
 
-    # Explicitly write with UTF-8 encoding
-    with open(target_file, "w", encoding="utf-8") as f:
-        f.write(json_content)
+    json_content = json.dumps(
+        data_dict,
+        ensure_ascii=False,
+        indent=2,
+    )
 
-    print(f"[{category.value}] Successfully parsed and saved to: {target_file}")
+    with open(
+        target_file,
+        "w",
+        encoding="utf-8",
+    ) as file:
+        file.write(json_content)
+
+    print(
+        f"[{category.value}] "
+        f"Successfully parsed and saved to: "
+        f"{target_file}"
+    )
+
     return model, target_file
 
 
+# =============================================================================
+# BATCH PARSING
+# =============================================================================
+
 def batch_parse(
-    input_dir: Union[str, Path] = "sample-data/documents",
-    output_dir: Union[str, Path] = "ai-service/trial_op_data",
-    schema_type: Union[str, Type[BaseModel], DocumentCategory, None] = "auto",
-    llm: Optional[ChatGoogleGenerativeAI] = None,
+    input_dir: Union[str, Path] = (
+        "sample-data/documents"
+    ),
+    output_dir: Union[str, Path] = (
+        "ai-service/trial_op_data"
+    ),
+    schema_type: Union[
+        str,
+        Type[BaseModel],
+        DocumentCategory,
+        None,
+    ] = "auto",
+    llm: Optional[ChatOpenAI] = None,
 ) -> List[Tuple[BaseModel, Path]]:
     """
-    Parses all land document files in the specified directory and saves outputs to trial_op_data.
+    Parses all PDF/TXT documents in a directory.
     """
+
     in_path = Path(input_dir)
+
     if not in_path.is_absolute():
         in_path = PROJECT_ROOT / in_path
 
     if not in_path.is_dir():
-        raise FileNotFoundError(f"Input directory not found: {in_path}")
+        raise FileNotFoundError(
+            f"Input directory not found: {in_path}"
+        )
 
-    files = sorted(list(in_path.glob("**/*.pdf")) + list(in_path.glob("**/*.txt")))
-    results = []
+    files = sorted(
+        list(in_path.glob("**/*.pdf"))
+        + list(in_path.glob("**/*.txt"))
+    )
 
-    print(f"Found {len(files)} documents to parse in {in_path}...")
+    results: List[
+        Tuple[BaseModel, Path]
+    ] = []
+
+    print(
+        f"Found {len(files)} documents "
+        f"to parse in {in_path}..."
+    )
+
     for file_path in files:
-        print(f"\nProcessing: {file_path.name}")
+
+        print(
+            f"\nProcessing: "
+            f"{file_path.name}"
+        )
+
         try:
-            model, out_file = parse_and_save(
+
+            model, output_file = parse_and_save(
                 document_source=file_path,
                 output_dir=output_dir,
                 schema_type=schema_type,
                 llm=llm,
             )
-            results.append((model, out_file))
-        except Exception as e:
-            print(f"Error parsing {file_path.name}: {e}", file=sys.stderr)
+
+            results.append(
+                (model, output_file)
+            )
+
+        except Exception as exc:
+
+            print(
+                f"Error parsing "
+                f"{file_path.name}: {exc}",
+                file=sys.stderr,
+            )
 
     return results
 
 
 # =============================================================================
-# CLI / Direct Execution
+# CLI
 # =============================================================================
 
 if __name__ == "__main__":
+
     parser_cli = argparse.ArgumentParser(
-        description="Universal Indian Land Record Parser using Gemini LLM and Pydantic Schemas."
+        description=(
+            "Universal Indian Land Record "
+            "Parser using OpenRouter and "
+            "Pydantic schemas."
+        )
     )
+
     parser_cli.add_argument(
-        "--file", "-f",
+        "--file",
+        "-f",
         type=str,
-        default="sample-data/documents/handwritten/HANDWRITTEN_002.pdf",
-        help="Path to land document (PDF, TXT, JSON) to parse (default: sample-data/documents/mutation/MUTATION_001.pdf)",
+        default=(
+            "sample-data/documents/"
+            "handwritten/"
+            "HANDWRITTEN_002.pdf"
+        ),
+        help=(
+            "Path to land document."
+        ),
     )
+
     parser_cli.add_argument(
-        "--schema", "-s",
+        "--schema",
+        "-s",
         type=str,
         default="auto",
-        choices=["auto", "mutation", "registration", "handwritten", "ror", "unified"],
-        help="Target schema: 'auto' (default), 'mutation', 'registration', 'handwritten', 'ror', or 'unified'",
+        choices=[
+            "auto",
+            "mutation",
+            "registration",
+            "handwritten",
+            "ror",
+            "unified",
+        ],
+        help=(
+            "Target schema."
+        ),
     )
+
     parser_cli.add_argument(
-        "--output-dir", "-o",
+        "--output-dir",
+        "-o",
         type=str,
-        default="ai-service/trial_op_data",
-        help="Directory to save trial output JSON files (default: ai-service/trial_op_data)",
+        default=(
+            "ai-service/trial_op_data"
+        ),
+        help=(
+            "Directory for extracted JSON."
+        ),
     )
+
     parser_cli.add_argument(
-        "--all", "-a",
+        "--all",
+        "-a",
         action="store_true",
-        help="Batch parse all documents in sample-data/documents/",
+        help=(
+            "Parse all sample documents."
+        ),
     )
+
     parser_cli.add_argument(
         "--input-dir",
         type=str,
         default="sample-data/documents",
-        help="Directory containing documents for batch parsing (used with --all)",
+        help=(
+            "Input directory for batch parsing."
+        ),
     )
 
     args = parser_cli.parse_args()
 
-    if args.all:
-        batch_parse(
-            input_dir=args.input_dir,
-            output_dir=args.output_dir,
-            schema_type=args.schema,
-            llm=llm,
+    try:
+
+        if args.all:
+
+            batch_parse(
+                input_dir=args.input_dir,
+                output_dir=args.output_dir,
+                schema_type=args.schema,
+                llm=llm,
+            )
+
+        else:
+
+            model, saved_path = parse_and_save(
+                document_source=args.file,
+                output_dir=args.output_dir,
+                schema_type=args.schema,
+                llm=llm,
+            )
+
+            print(
+                "\nExtracted Document Data:"
+            )
+
+            print(
+                json.dumps(
+                    model.model_dump(
+                        mode="json"
+                    ),
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            )
+
+    except Exception as exc:
+
+        print(
+            f"\nParser Error: {exc}",
+            file=sys.stderr,
         )
-    else:
-        model, saved_path = parse_and_save(
-            document_source=args.file,
-            output_dir=args.output_dir,
-            schema_type=args.schema,
-            llm=llm,
-        )
-        print("\nExtracted Document Data:")
-        print(json.dumps(model.model_dump(mode="json"), ensure_ascii=False, indent=2))
+
+        sys.exit(1)

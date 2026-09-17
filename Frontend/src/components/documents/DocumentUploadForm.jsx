@@ -101,9 +101,9 @@ function DocumentUploadForm({
 
       /*
        * Backend multer field.
-       * Backend should use upload.single("file").
+       * Backend should use upload.single("document").
        */
-      formData.append("file", file);
+      formData.append("document", file);
 
       formData.append(
         "document_type",

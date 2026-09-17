@@ -35,18 +35,16 @@ router.get(
  * Get parcel using parcel UUID
  */
 router.get(
-  "/:id",
-  authenticate,
-  getParcelById
-);
-
-/*
- * Get parcel using ULPIN / Survey / Khasra
- */
-router.get(
   "/search",
   authenticate,
   getParcelByIdentifiers
+);
+
+/* Get parcel using parcel UUID. Kept after /search. */
+router.get(
+  "/:id",
+  authenticate,
+  getParcelById
 );
 
 module.exports = router;

@@ -14,8 +14,19 @@ const getResultsByDocumentId = async (documentId) => {
       similarity_score,
       confidence_score,
       validation_method,
-      created_at
+      created_at,
+      latest_verification.action AS verification_action,
+      latest_verification.corrected_value,
+      latest_verification.remarks AS verification_remarks,
+      latest_verification.verified_at
     FROM validation_results
+    LEFT JOIN LATERAL (
+      SELECT action, corrected_value, remarks, verified_at
+      FROM verification_records
+      WHERE validation_id = validation_results.id
+      ORDER BY verified_at DESC
+      LIMIT 1
+    ) AS latest_verification ON TRUE
     WHERE document_id = $1
     ORDER BY created_at ASC
     `,
@@ -37,8 +48,8 @@ const getSummaryByDocumentId = async (documentId) => {
         WHERE match_status = 'mismatch'
       ) AS mismatched,
       COUNT(*) FILTER (
-        WHERE match_status = 'partial_match'
-      ) AS partial_matches,
+        WHERE match_status IN ('partial_match', 'pending', 'not_found')
+      ) AS review,
       COUNT(*) FILTER (
         WHERE match_status = 'not_found'
       ) AS not_found

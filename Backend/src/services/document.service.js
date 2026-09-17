@@ -82,7 +82,27 @@ const findDocumentById = async (id) => {
       lr.land_classification_hindi,
       lr.land_classification_english,
       lr.ownership_share,
-      lr.ulpin
+      lr.ulpin,
+      jsonb_strip_nulls(jsonb_build_object(
+        'district_hindi', lr.district_hindi,
+        'district_english', lr.district_english,
+        'tehsil_hindi', lr.tehsil_hindi,
+        'tehsil_english', lr.tehsil_english,
+        'village_hindi', lr.village_hindi,
+        'village_english', lr.village_english,
+        'khata_number', lr.khata_number,
+        'khasra_number', lr.khasra_number,
+        'survey_number', lr.survey_number,
+        'land_area_hectares', lr.area_hectares,
+        'land_area_acres', lr.area_acres,
+        'land_area_bigha', lr.area_bigha,
+        'land_classification_hindi', lr.land_classification_hindi,
+        'land_classification_english', lr.land_classification_english,
+        'ownership_share', lr.ownership_share,
+        'ulpin', lr.ulpin,
+        'owner_name_english', (SELECT o.name_english FROM owners o WHERE o.land_record_id = lr.id AND o.ownership_role = 'OWNER' ORDER BY o.created_at LIMIT 1),
+        'owner_name_hindi', (SELECT o.name_hindi FROM owners o WHERE o.land_record_id = lr.id AND o.ownership_role = 'OWNER' ORDER BY o.created_at LIMIT 1)
+      )) AS extracted_data
     FROM documents d
     LEFT JOIN land_records lr
       ON lr.document_id = d.id
@@ -114,9 +134,18 @@ const updateProcessingStatus = async (
   return result.rows[0] || null;
 };
 
+const updateExtractionSource = async (id, extractionSource) => {
+  const result = await pool.query(
+    "UPDATE documents SET extraction_source = $1 WHERE id = $2 RETURNING *",
+    [extractionSource, id]
+  );
+  return result.rows[0] || null;
+};
+
 module.exports = {
   createDocument,
   findAllDocuments,
   findDocumentById,
   updateProcessingStatus,
+  updateExtractionSource,
 };

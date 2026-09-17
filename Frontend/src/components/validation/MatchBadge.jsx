@@ -36,7 +36,10 @@ function MatchBadge({
 
   if (
     normalizedStatus === "REVIEW" ||
-    normalizedStatus === "NEEDS_REVIEW"
+    normalizedStatus === "NEEDS_REVIEW" ||
+    normalizedStatus === "PARTIAL_MATCH" ||
+    normalizedStatus === "NOT_FOUND" ||
+    normalizedStatus === "PENDING"
   ) {
     label = "Needs Review";
     className =

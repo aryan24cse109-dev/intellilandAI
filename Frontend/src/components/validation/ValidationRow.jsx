@@ -76,9 +76,15 @@ function ValidationRow({
       "REVIEW",
       "NEEDS_REVIEW",
       "INVALID",
+      "PENDING",
+      "NOT_FOUND",
+      "PARTIAL_MATCH",
     ].includes(
       String(status).toUpperCase()
     );
+
+  const verificationAction =
+    result?.verification_action;
 
 
   return (
@@ -114,7 +120,11 @@ function ValidationRow({
 
 
       <td>
-        {needsReview ? (
+        {verificationAction ? (
+          <span className="validation-auto-label">
+            {`Verified: ${verificationAction}`}
+          </span>
+        ) : needsReview ? (
           <button
             type="button"
             className="validation-review-button"

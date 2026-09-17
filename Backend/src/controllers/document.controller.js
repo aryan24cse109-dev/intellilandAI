@@ -2,11 +2,19 @@
 const documentService = require("../services/document.service");
 const { processDocumentWithAI } = require("../services/ai.service");
 const { createAuditLog } = require("../services/audit.service");
+
+const processingService = require("../services/processing.service");
+
 const {
   isAllowedDocumentType,
   isValidUUID,
 } = require("../utils/validators");
 
+console.log(
+  "PROCESSING SERVICE EXPORTS:",
+  Object.keys(processingService),
+  typeof processingService.persistProcessingResult
+);
 
 /**
  * POST /api/documents/upload
@@ -200,12 +208,16 @@ const processDocument = async (req, res, next) => {
       // Call Python/FastAPI AI service
       const aiResult = await processDocumentWithAI(document);
 
+      const persisted = await processingService.persistProcessingResult(id, aiResult);
+      const extractionSource = aiResult?.data?.extraction_source || aiResult?.extraction_source || "unknown";
+
       // Update status → completed
       await documentService.updateProcessingStatus(
         id,
         "completed",
         new Date()
       );
+      await documentService.updateExtractionSource(id, extractionSource);
 
       // Audit successful processing
       await createAuditLog({
@@ -216,6 +228,8 @@ const processDocument = async (req, res, next) => {
         entityId: id,
         newValue: {
           processing_status: "completed",
+          land_record_id: persisted.landRecord.id,
+          extraction_source: extractionSource,
         },
         ipAddress: req.ip,
       });
@@ -226,6 +240,8 @@ const processDocument = async (req, res, next) => {
         data: {
           document_id: id,
           ai_result: aiResult,
+          land_record: persisted.landRecord,
+          owner: persisted.owner,
         },
       });
     } catch (aiError) {

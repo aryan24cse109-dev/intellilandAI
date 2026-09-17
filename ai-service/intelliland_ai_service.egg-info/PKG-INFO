@@ -1,0 +1,18 @@
+Metadata-Version: 2.4
+Name: intelliland-ai-service
+Version: 1.0.0
+Summary: AI service for IntelliLandAI land record digitization
+Requires-Python: >=3.13
+Requires-Dist: fastapi
+Requires-Dist: uvicorn
+Requires-Dist: python-multipart
+Requires-Dist: numpy
+Requires-Dist: opencv-python
+Requires-Dist: pymupdf
+Requires-Dist: scikit-image
+Requires-Dist: deskew
+Requires-Dist: langchain
+Requires-Dist: langchain-community
+Requires-Dist: langchain-openai
+Requires-Dist: python-dotenv
+Requires-Dist: paddleocr

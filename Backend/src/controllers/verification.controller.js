@@ -5,9 +5,12 @@ const verifyField = async (req, res, next) => {
     const {
       document_id,
       validation_id,
+      validation_result_id,
       action,
       corrected_value,
       remarks,
+      notes,
+      field_name,
     } = req.body;
 
     const allowedActions = [
@@ -33,11 +36,12 @@ const verifyField = async (req, res, next) => {
 
     const data = await verificationService.createVerification({
       documentId: document_id,
-      validationId: validation_id || null,
+      validationId: validation_id || validation_result_id || null,
       officerId: req.user.id,
       action,
       correctedValue: corrected_value || null,
-      remarks: remarks || null,
+      remarks: remarks || notes || null,
+      fieldName: field_name || null,
     });
 
     res.status(201).json({

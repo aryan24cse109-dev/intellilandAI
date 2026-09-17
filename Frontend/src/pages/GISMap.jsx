@@ -113,7 +113,7 @@ function GISMap() {
             </div>
 
             <span className="gis-status-badge">
-              GIS
+              {parcel?.link_method || "GIS"}
             </span>
           </div>
 
@@ -135,8 +135,8 @@ function GISMap() {
         </Link>
 
         <div className="gis-source-note">
-          Parcel geometry is displayed from the configured
-          spatial reference source.
+          Synthetic demo parcel geometry from the configured
+          PostGIS reference source.
         </div>
       </div>
     </div>
