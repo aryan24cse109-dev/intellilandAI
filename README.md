@@ -46,7 +46,7 @@ A cloud-hosted deployment is planned for evaluator access. The live URL will be 
 
 ### Demo Video
 
-> **Complete Working Demo:** `<ADD_DEMO_VIDEO_LINK>`
+> **Complete Working Demo:** `<https://youtu.be/Zx0Wei0orts?si=tdP-MXs5pLa4jGAY>`
 
 The recorded demonstration shows the working prototype and its end-to-end workflow.
 
