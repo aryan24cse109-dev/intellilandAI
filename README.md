@@ -48,7 +48,7 @@ A cloud-hosted deployment is planned for evaluator access. The live URL will be 
 
 ### 🎥 Demo Video
 
-[▶️ Complete Working Demo — IntelliLandAI | Intelligent Land Record Digitization & Parcel Linking](https://youtu.be/Zx0Wei0orts)
+[▶️ Complete Working Demo — IntelliLandAI | Intelligent Land Record Digitization & Parcel Linking](https://youtu.be/pcRx5c9r7yw?si=jxWj2AC0wuQheuSK)
 
 ---
 
