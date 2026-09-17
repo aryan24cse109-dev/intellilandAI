@@ -44,10 +44,9 @@ GIS Parcel View
 
 A cloud-hosted deployment is planned for evaluator access. The live URL will be added here after the cloud deployment is fully verified.
 
-### Demo Video
+### 🎥 Demo Video
 
-> **Complete Working Demo:** `<https://youtu.be/Zx0Wei0orts?si=tdP-MXs5pLa4jGAY>`
-
+[▶️ Watch IntelliLandAI Complete Working Demo](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
 The recorded demonstration shows the working prototype and its end-to-end workflow.
 
 ---
