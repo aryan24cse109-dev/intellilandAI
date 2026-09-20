@@ -24,17 +24,26 @@ const app = express();
 
 const allowedOrigins = [
   "https://intelliland.vercel.app",
-  "https://intelliland-2vgzpi117-bhumatrix.vercel.app",
 ];
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
+      if (!origin) {
+        return callback(null, true);
       }
+
+      const isProductionVercel =
+        origin === "https://intelliland.vercel.app";
+
+      const isVercelDeployment =
+        /^https:\/\/intelliland-[a-z0-9]+-bhumatrix\.vercel\.app$/.test(origin);
+
+      if (isProductionVercel || isVercelDeployment) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
   })
