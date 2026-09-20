@@ -32,7 +32,8 @@ IntelliLandAI is a working prototype built for Smart India Hackathon 2026. It ta
 
 [🚀 Open the IntelliLandAI Live Demo](https://intelliland-auvb9qa8u-bhumatrix.vercel.app/login)
 
-> The Backend and AI Service run on free-tier hosting, so the **first request after a period of inactivity can take a while** while the services wake up. If the first login or page load is slow, please wait a moment and retry.
+> Live AI processing is also supported for demonstration purposes. Because it depends on a third-party inference provider and free-tier hosting, response time and availability may vary.
+For evaluation, the pre-processed samples are recommended.
 
 ## 🔐 Demo Login Credentials
 
@@ -46,7 +47,8 @@ These credentials exist **only for the prototype/demo environment**. Do not reus
 
 ## 🧪 Evaluator / Demo Guide
 
-The quickest way to see the complete workflow is to use the **pre-processed sample documents**. They have already been through extraction, so you can inspect every stage without triggering new AI processing.
+The quickest way to see the complete workflow is to use the **pre-processed sample documents**.
+The corresponding records are already processed in the live demo, so you can inspect the complete workflow without triggering new AI processing.
 
 ### Recommended evaluation path
 
@@ -769,7 +771,8 @@ Please never commit secrets or real land-record data.
 
 ## 📄 License
 
-No license file is currently included in this repository, so no reuse terms have been specified. <!-- If you add a LICENSE file (e.g. MIT or Apache-2.0), replace this section with the license name and a link to it. -->
+This repository is currently provided for Smart India Hackathon 2026
+evaluation and prototype demonstration purposes.
 
 ## 🙏 Acknowledgements
 
