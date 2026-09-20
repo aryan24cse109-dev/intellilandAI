@@ -168,7 +168,7 @@ def get_llm(
         base_url="https://openrouter.ai/api/v1",
         timeout=timeout,
         max_retries=max_retries,
-        max_tokens=8192,
+        max_tokens=4096,
         model_kwargs={
             "response_format": {
                 "type": "json_object"
