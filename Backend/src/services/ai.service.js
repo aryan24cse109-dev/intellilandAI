@@ -10,8 +10,6 @@ const processDocumentWithAI = async (document) => {
     controller.abort();
   }, 120000);
 
-  let fileStream = null;
-
   try {
     if (!document?.file_path) {
       throw new Error("Document file path is missing");
@@ -35,8 +33,6 @@ const processDocumentWithAI = async (document) => {
       formData.append("language", document.language);
     }
 
-    fileStream = fs.createReadStream(document.file_path);
-
     const originalFileName =
       document.file_name ||
       path.basename(document.file_path);
@@ -57,13 +53,17 @@ const processDocumentWithAI = async (document) => {
       contentType = "image/png";
     }
 
+    const fileBlob = await fs.openAsBlob(
+      document.file_path,
+      {
+        type: contentType,
+      }
+    );
+
     formData.append(
       "file",
-      fileStream,
-      {
-        filename: originalFileName,
-        contentType,
-      }
+      fileBlob,
+      originalFileName
     );
 
     const response = await fetch(
@@ -111,10 +111,6 @@ const processDocumentWithAI = async (document) => {
 
     throw error;
   } finally {
-    if (fileStream) {
-      fileStream.destroy();
-    }
-
     clearTimeout(timeout);
   }
 };
