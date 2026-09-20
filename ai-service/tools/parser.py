@@ -157,7 +157,7 @@ def get_llm(
     except ValueError:
         max_retries = 2
 
-      return ChatOpenAI(
+          return ChatOpenAI(
         model=selected_model,
         temperature=0.0,
         api_key=api_key,
