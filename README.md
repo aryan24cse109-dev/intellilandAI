@@ -1,99 +1,107 @@
 # IntelliLandAI
 
-**AI-powered Intelligent Land Record Digitization, Validation and Parcel Linking Platform**
+**AI-powered land record digitization, validation and parcel linking platform**
 
-IntelliLandAI is an AI-assisted prototype that modernizes land-record workflows. It digitizes scanned and legacy land records (including poor-quality, handwritten and regional-language documents), extracts structured fields using OCR and an LLM, validates them against authorized reference/demo data, routes discrepancies to human reviewers, links records to GIS parcels, and visualizes them on a map, with a complete audit trail.
+IntelliLandAI is a working prototype built for Smart India Hackathon 2026. It takes scanned and legacy land-record documents, extracts structured fields using OCR and an LLM, checks them against reference/demo data, sends discrepancies to a human reviewer, links each record to a GIS parcel, and shows the result on a map, with an audit trail for every important action.
 
 > **Core concept**
-> **Document** tells *WHAT / WHICH LAND* · **GIS** tells *WHERE* · **Validation** checks *WHETHER INFORMATION IS CONSISTENT*
+>
+> | | |
+> |---|---|
+> | **Document** | tells us **WHAT / WHICH LAND** |
+> | **GIS** | tells us **WHERE** |
+> | **Validation** | checks **WHETHER THE INFORMATION IS CONSISTENT** |
 
-> ⚠️ **Prototype notice:** IntelliLandAI is an AI-assisted decision-support prototype built on synthetic/demo data. It does **not** replace authorized government verification, legal land-record authorities, or official government systems.
+> ⚠️ **Prototype notice**
+> IntelliLandAI is an AI-assisted decision-support prototype running entirely on **synthetic/demo data**. It is **not** connected to any government database and does **not** replace authorized government verification, legal land-record authorities, or official government systems. AI output is meant to be reviewed by a human.
 
 ![Status](https://img.shields.io/badge/status-working%20prototype-blue)
 ![Frontend](https://img.shields.io/badge/frontend-React%20%2B%20Vite-61DAFB?logo=react&logoColor=white)
 ![Backend](https://img.shields.io/badge/backend-Node.js%20%2B%20Express-339933?logo=nodedotjs&logoColor=white)
-![AI](https://img.shields.io/badge/AI%20service-FastAPI-009688?logo=fastapi&logoColor=white)
+![AI Service](https://img.shields.io/badge/AI%20service-FastAPI-009688?logo=fastapi&logoColor=white)
 ![Database](https://img.shields.io/badge/database-PostgreSQL%20%2B%20PostGIS-4169E1?logo=postgresql&logoColor=white)
 ![Data](https://img.shields.io/badge/data-synthetic%20%2F%20demo-orange)
 
 ---
 
-### 🎥 Demo Video
+## 🎥 Demo Video
 
-[▶️ Watch IntelliLandAI | AI-Powered Land Record Digitization, Validation & GIS Parcel Linking](https://youtu.be/6ntKG6ohBbA?si=KandPt-S9j1Q472e)
+[▶️ Watch: IntelliLandAI – AI-Powered Land Record Digitization, Validation & GIS Parcel Linking](https://youtu.be/6ntKG6ohBbA?si=KandPt-S9j1Q472e)
 
-Live AI extraction uses a third-party inference provider and may be
-> subject to provider availability and usage limits. Pre-processed
-> samples are provided so the complete prototype workflow can be
-> evaluated without repeated external AI requests.
+## 🌐 Live Demo
 
-### 🌐 Live Demo
+[🚀 Open the IntelliLandAI Live Demo](https://intelliland-auvb9qa8u-bhumatrix.vercel.app/login)
 
-[🚀 Open IntelliLandAI Live Demo](https://intelliland-auvb9qa8u-bhumatrix.vercel.app/login)
+> The Backend and AI Service run on free-tier hosting, so the **first request after a period of inactivity can take a while** while the services wake up. If the first login or page load is slow, please wait a moment and retry.
 
----
 ## 🔐 Demo Login Credentials
-
-For demonstration purposes, the following prototype account can be used:
 
 | Role | Email | Password |
 |---|---|---|
 | Admin | `admin@intelliland.local` | `Admin@123` |
 
-> **Note:** These credentials are provided only for the prototype/demo environment. Do not use demo credentials in a production deployment.
+These credentials exist **only for the prototype/demo environment**. Do not reuse them in any real deployment.
 
+---
 
 ## 🧪 Evaluator / Demo Guide
 
-To evaluate the complete IntelliLandAI workflow, please use the
-pre-processed sample documents provided in the `sample-data/` directory.
+The quickest way to see the complete workflow is to use the **pre-processed sample documents**. They have already been through extraction, so you can inspect every stage without triggering new AI processing.
 
-### Recommended Evaluation Flow
+### Recommended evaluation path
 
-1. Open the [Live IntelliLandAI Demo](https://intelliland-auvb9qa8u-bhumatrix.vercel.app/login)
-2. Login using the demo credentials provided below.
-3. Navigate to **Documents**.
-4. Use the documents available in:
-   `sample-data/`
-5. Prefer the **pre-processed sample documents** marked/referenced as
-   successfully processed.
-6. Open a processed document and explore:
-   - Extracted land-record information
-   - Validation results
-   - Human verification/review
-   - Audit history
-   - Parcel linking
-   - GIS visualization
+1. Open the [Live Demo](https://intelliland-auvb9qa8u-bhumatrix.vercel.app/login).
+2. Log in with the [demo credentials](#-demo-login-credentials) above.
+3. Go to **Documents**.
+4. Pick one of the already processed sample records (see [Recommended Sample Documents](#-recommended-sample-documents)).
+5. Open the document and explore:
+   - **Extracted land-record fields** (structured extraction)
+   - **Validation results** and flagged discrepancies
+   - **Human verification / review**
+   - **Audit history**
+   - **Parcel linking**
+   - **GIS visualization** on the map
 
-> **Important:** The provided sample documents are already processed and
-> are intended for reliable demonstration of the complete end-to-end
-> workflow. Evaluators do not need to repeatedly trigger live AI
-> processing for these samples.
+You do **not** need to upload and re-process documents to evaluate the project.
 
-### Live AI Processing
+### About live AI processing
 
-IntelliLandAI also supports live document processing through the AI service.
-Live processing depends on the availability and usage limits of the
-configured third-party inference provider.
+Live document processing through the AI Service is supported. It relies on a third-party inference provider (OpenRouter-compatible LLM), so it is subject to that provider's availability and usage limits. The pre-processed samples exist so the full end-to-end workflow can be evaluated reliably without repeated external AI requests.
 
-For evaluation of the complete workflow, the provided pre-processed
-samples are recommended.
+If you do try live upload, please expect that it may be slow or occasionally unavailable, and that extraction quality depends on document quality, language and handwriting.
 
-### 📄 Recommended Sample Documents
+## 📄 Recommended Sample Documents
 
-The following pre-processed documents are recommended for evaluation:
+The source PDFs for the synthetic samples are in [`sample-data/documents/`](./sample-data/documents/). In the live demo, use the already processed records for these samples under **Documents**.
 
-| Document | Type | What to Explore |
-|---|---|---|
-| `01_ROR_processed.pdf` | RoR / Khatauni | Extracted land record + validation |
-| `02_ROR_processed.pdf` | RoR / Khatauni | Landowner and parcel information |
-| `03_Mutation_processed.pdf` | Mutation | Mutation-related validation |
-| `04_Registration_processed.pdf` | Registration | Registration data extraction |
-| `05_Handwritten_processed.pdf` | Handwritten | Handwritten/local-language processing |
+**Suggested starting points**, one per document type:
 
-These samples are already available in the `sample-data/` directory and
-are intended for evaluator demonstration.
+| Document | Type | Quality | What to explore |
+|---|---|---|---|
+| [ROR_001.pdf](./sample-data/documents/ror/ROR_001.pdf) | RoR / Khatauni | Clean | Extracted land record; validation is expected to match |
+| [ROR_002.pdf](./sample-data/documents/ror/ROR_002.pdf) | RoR / Khatauni | Medium | Discrepancy detection; validation is expected to mismatch |
+| [MUTATION_001.pdf](./sample-data/documents/mutation/MUTATION_001.pdf) | Mutation | Medium | Mutation-related validation; expected to mismatch |
+| [REGISTRATION_001.pdf](./sample-data/documents/registration/REGISTRATION_001.pdf) | Registration | Clean | Registration data extraction |
+| [HANDWRITTEN_001.pdf](./sample-data/documents/handwritten/HANDWRITTEN_001.pdf) | Handwritten | Medium | Handwritten / Hindi-language processing |
 
+### All sample documents
+
+| Document | Type | Language | Quality | Expected validation |
+|---|---|---|---|---|
+| [ROR_001.pdf](./sample-data/documents/ror/ROR_001.pdf) | RoR | Hindi-English | Clean | Match |
+| [ROR_001_POOR_QUALITY.pdf](./sample-data/documents/ror/ROR_001_POOR_QUALITY.pdf) | RoR | Hindi-English | Poor | Match |
+| [ROR_002.pdf](./sample-data/documents/ror/ROR_002.pdf) | RoR | Hindi | Medium | Mismatch |
+| [MUTATION_001.pdf](./sample-data/documents/mutation/MUTATION_001.pdf) | Mutation | Hindi-English | Medium | Mismatch |
+| [REGISTRATION_001.pdf](./sample-data/documents/registration/REGISTRATION_001.pdf) | Registration | English | Clean | Match |
+| [REGISTRATION_001_POOR_QUALITY.pdf](./sample-data/documents/registration/REGISTRATION_001_POOR_QUALITY.pdf) | Registration | English | Poor | Match |
+| [REGISTRATION_002.pdf](./sample-data/documents/registration/REGISTRATION_002.pdf) | Registration | Hindi-English | Poor | Mismatch |
+| [HANDWRITTEN_001.pdf](./sample-data/documents/handwritten/HANDWRITTEN_001.pdf) | Handwritten | Hindi | Medium | Match |
+| [HANDWRITTEN_001_POOR_QUALITY.pdf](./sample-data/documents/handwritten/HANDWRITTEN_001_POOR_QUALITY.pdf) | Handwritten | Hindi | Very poor | Match |
+| [HANDWRITTEN_002.pdf](./sample-data/documents/handwritten/HANDWRITTEN_002.pdf) | Handwritten | Hindi | Poor | Mismatch |
+
+"Expected validation" comes from the dataset metadata ([`dataset.json`](./sample-data/metadata/dataset.json)) and describes the outcome the sample was designed to produce. All samples are **synthetic/demo documents**, not real land records.
+
+---
 
 ## 📑 Table of Contents
 
@@ -128,45 +136,43 @@ are intended for evaluator demonstration.
 
 ## 🧩 Problem
 
-Land-record modernization faces several practical challenges:
+Land-record modernization runs into a few practical problems:
 
-- Large volumes of **scanned and legacy records** exist only as images or PDFs.
-- Documents are often **poor quality** (faded, skewed, noisy, stained), **handwritten**, or written in **local/regional languages**.
+- Large volumes of records exist only as **scanned or legacy images and PDFs**.
+- Many documents are **faded, skewed, stained or noisy**, **handwritten**, or written in **local/regional languages**.
 - Key details (owner, survey/khasra numbers, area, mutation and registration references) are locked inside unstructured documents.
-- Textual records are frequently **disconnected from geographic parcels**, making it hard to see *where* a record actually lies.
-- Inconsistencies between records and reference data are hard to detect manually at scale.
-- Digitized outputs need **human accountability** and an **audit trail** before they can be trusted.
+- Textual records are often **disconnected from geographic parcels**, so it is hard to see *where* a record actually lies.
+- Inconsistencies between a record and reference data are hard to catch manually at scale.
+- Digitized output needs **human accountability** and an **audit trail** before anyone can rely on it.
 
 ## 💡 Solution
 
-IntelliLandAI provides an end-to-end prototype pipeline:
+IntelliLandAI is an end-to-end prototype pipeline:
 
 1. **Digitize** uploaded land-record documents with preprocessing and OCR.
-2. **Extract** important land-record fields into structured JSON using an LLM-assisted parser.
-3. **Validate** extracted data against authorized reference/demo data and flag discrepancies.
-4. **Verify** through a human-in-the-loop review and correction workflow.
+2. **Extract** land-record fields into structured JSON using an LLM-assisted parser.
+3. **Validate** the extracted data against reference/demo data and flag discrepancies.
+4. **Verify** through a human-in-the-loop review and correction step.
 5. **Link** each land record to a GIS parcel using an identifier hierarchy.
 6. **Visualize** linked parcels on an interactive map.
-7. **Audit** every important action for traceability.
+7. **Audit** important actions for traceability.
 
 ## ✨ Key Features
 
 | Area | Current prototype capability |
 |---|---|
-| Document digitization | Upload of scanned/legacy records with preprocessing (e.g., deskewing) and OCR |
-| Document diversity | Designed for printed and handwritten records, and local/regional-language documents |
-| Structured extraction | AI service returns structured JSON with land-record fields |
+| Document digitization | Upload of scanned/legacy records, with preprocessing (e.g. deskewing) and OCR |
+| Document diversity | Designed for printed and handwritten records and local/regional-language documents |
+| Structured extraction | AI Service returns structured JSON with land-record fields |
 | Validation | Comparison of extracted data with reference/demo data and discrepancy detection |
 | Human verification | Review, correction and verification before a record is treated as verified |
 | Parcel linking | Identifier-hierarchy matching (ULPIN → Survey + Khasra → Khasra → manual review) |
-| GIS visualization | Leaflet-based map of linked parcels with parcel details |
+| GIS visualization | Leaflet map of linked parcels with parcel details |
 | Access control | JWT authentication with role-based authorization |
 | Audit tracking | Audit logging and an audit-history view |
 | Dashboard | Overview of documents and processing state |
 
 ## 🏗️ System Architecture
-
-### A. Logical application architecture
 
 The application is modular: **Frontend → Backend → AI Service → Database / GIS**.
 
@@ -178,27 +184,27 @@ flowchart LR
     AI --> OCR["Preprocessing + OCR<br/>OpenCV, PaddleOCR, PyMuPDF"]
     AI --> LLM["LLM extraction<br/>LangChain + OpenRouter"]
     BE --> DB[("PostgreSQL + PostGIS")]
-    DB --> GIS["Parcel geometry<br/>(GIS data)"]
+    DB --> GIS["Parcel geometry<br/>(prototype GIS data)"]
     GIS --> BE
 ```
 
 | Layer | Responsibility |
 |---|---|
-| **Frontend** | User interface: login, dashboard, upload, document details, validation review, verification, GIS map, audit history |
-| **Backend** | Authentication/authorization, file upload, document and land-record APIs, validation and verification workflows, parcel linking, audit logging, database access, and orchestration of calls to the AI service |
-| **AI Service** | Document preprocessing, OCR/text extraction, LLM-assisted structured field extraction and normalization; returns structured JSON to the backend |
-| **Database / GIS** | Persistent storage of users, documents, land records, validation/verification results, audit logs, and PostGIS parcel geometry |
+| **Frontend** | Login, dashboard, upload, document details, validation review, verification, GIS map, audit history |
+| **Backend** | Authentication and authorization, file upload, document and land-record APIs, validation and verification workflows, parcel linking, audit logging, database access, and calls to the AI Service |
+| **AI Service** | Document preprocessing, OCR/text extraction, LLM-assisted field extraction and normalization; returns structured JSON to the Backend |
+| **Database / GIS** | Storage of users, documents, land records, validation/verification results, audit logs, and PostGIS parcel geometry |
 
-> The deployment architecture (where each layer is hosted) is described in [Deployment Architecture](#-deployment-architecture).
+Where each layer is hosted is covered in [Deployment Architecture](#-deployment-architecture).
 
 ## 🔄 End-to-End Workflow
 
 ```mermaid
 flowchart TD
     A["Login"] --> B["Dashboard"]
-    B --> C["Upload Land Record"]
+    B --> C["Upload"]
     C --> D["Preprocessing"]
-    D --> E["AI Extraction"]
+    D --> E["OCR / AI Extraction"]
     E --> F["Structured Land Record"]
     F --> G["Reference Matching"]
     G --> H["Validation"]
@@ -210,22 +216,22 @@ flowchart TD
     M --> N["Audit Tracking"]
 ```
 
-| Step | Description |
+| Step | What happens |
 |---|---|
-| Login | User authenticates and receives a JWT; UI access depends on role |
+| Login | The user authenticates and receives a JWT; UI access depends on role |
 | Dashboard | Overview of documents and processing status |
-| Upload | A scanned/legacy land record (image or PDF) is uploaded through the backend |
-| Preprocessing | The AI service cleans the document (e.g., deskewing) to improve readability |
-| AI Extraction | OCR and LLM-assisted parsing pull out land-record fields |
-| Structured Record | Extracted fields are normalized into a structured land record |
-| Reference Matching | The record is compared with authorized reference/demo data |
-| Validation | Field-level consistency checks are performed |
-| Discrepancy Detection | Mismatches and issues are flagged for attention |
+| Upload | A scanned/legacy land record (image or PDF) is uploaded through the Backend |
+| Preprocessing | The AI Service cleans the document (e.g. deskewing) to improve readability |
+| OCR / AI Extraction | OCR and LLM-assisted parsing pull out the land-record fields |
+| Structured Land Record | Extracted fields are normalized into a structured record |
+| Reference Matching | The record is compared with reference/demo data |
+| Validation | Field-level consistency checks are run |
+| Discrepancy Detection | Mismatches and issues are flagged |
 | Human Review | A reviewer inspects extracted values and flagged issues |
 | Verification | The reviewer corrects and/or verifies the record |
 | Parcel Linking | The record is matched to a GIS parcel using the identifier hierarchy |
 | GIS Visualization | The linked parcel is shown on the map |
-| Audit Tracking | Actions are logged and viewable in audit history |
+| Audit Tracking | Actions are logged and visible in the audit history |
 
 ## 🧰 Technology Stack
 
@@ -235,24 +241,22 @@ flowchart TD
 | Backend | Node.js, Express.js, REST APIs | Business logic, workflows, API layer |
 | AI Service | Python, FastAPI, Uvicorn | Document-processing microservice |
 | OCR | PaddleOCR | Text extraction from scanned documents |
-| Document Processing | OpenCV, scikit-image, deskew, PyMuPDF | Image preprocessing, deskewing, PDF handling |
+| Document processing | OpenCV, scikit-image, deskew, PyMuPDF | Image preprocessing, deskewing, PDF handling |
 | LLM | LangChain, LangChain OpenAI integration, OpenRouter-compatible LLM | Structured field extraction and document understanding |
 | Database | PostgreSQL, pgcrypto | Relational storage of application and land-record data |
 | GIS | PostGIS, Leaflet / React-Leaflet | Parcel geometry storage and map visualization |
 | Authentication | JWT, role-based middleware | Authentication and authorization |
-| File Uploads | Multer | Multipart file upload handling in the backend |
-| Hosting | Vercel (frontend), Render (backend, AI service), Aiven (PostgreSQL + PostGIS) | Deployed prototype |
-| Version Control | Git, GitHub | Source control and collaboration |
+| File uploads | Multer | Multipart upload handling in the Backend |
+| Hosting | Vercel (Frontend), Render (Backend, AI Service), Aiven (PostgreSQL + PostGIS) | Deployed prototype |
+| Version control | Git, GitHub | Source control |
 
 ## 🖥️ Frontend
 
-**Directory:** `Frontend/` · **Stack:** React, Vite, Leaflet / React-Leaflet, CSS / Tailwind CSS, Axios.
-
-The frontend is organized by responsibility:
+**Directory:** `Frontend/` · **Stack:** React, Vite, Leaflet / React-Leaflet, CSS / Tailwind CSS, Axios
 
 - **`pages/`**: route-level screens (`Login`, `Dashboard`, `Documents`, `DocumentUpload`, `DocumentDetails`, `ValidationReview`, `GISMap`, `AuditHistory`).
 - **`components/`**: reusable UI grouped by domain (`audit`, `common`, `dashboard`, `documents`, `gis`, `layout`, `validation`).
-- **`services/`**: API modules that wrap backend calls (`api.js` for the shared Axios setup, plus `auth`, `dashboard`, `document`, `parcel`, `validation`, `verification`, and `audit` services).
+- **`services/`**: API modules wrapping Backend calls (`api.js` for the shared Axios setup, plus `auth`, `dashboard`, `document`, `parcel`, `validation`, `verification` and `audit`).
 - **`hooks/`**: data/state hooks (`useAuth`, `useDashboard`, `useDocuments`, `useValidation`).
 - **`context/`**: global state via `AuthContext` and `AppContext`.
 - **`routes/`** and **`layouts/`**: routing (`AppRoutes.jsx`) and the shared page shell (`MainLayout.jsx`).
@@ -277,24 +281,24 @@ Data flow in the UI: **Page → Hook → Service → Backend API**, with `AuthCo
 
 ## ⚙️ Backend
 
-**Directory:** `Backend/` · **Stack:** Node.js, Express.js, REST APIs, JWT, PostgreSQL client, Multer.
+**Directory:** `Backend/` · **Stack:** Node.js, Express.js, REST APIs, JWT, PostgreSQL client, Multer
 
-**Responsibilities:** authentication, authorization, document management, file upload, land-record APIs, validation workflow, verification workflow, parcel linking, audit logging, database communication, and communication with the AI service.
+The Backend handles authentication, authorization, document management, file upload, land-record APIs, the validation and verification workflows, parcel linking, audit logging, database access, and communication with the AI Service.
 
-The backend follows a layered **Route → Controller → Service → Database** design:
+It follows a layered **Route → Controller → Service → Database** design:
 
 ```mermaid
 flowchart LR
-    R["Routes<br/>(URL + middleware)"] --> C["Controllers<br/>(request / response handling)"]
+    R["Routes<br/>(URL + middleware)"] --> C["Controllers<br/>(request / response)"]
     C --> S["Services<br/>(business logic)"]
     S --> D[("PostgreSQL / PostGIS")]
     S --> AI["AI Service<br/>(via ai.service.js)"]
 ```
 
 - **Routes** map endpoints to controllers and attach middleware (auth, role checks, uploads).
-- **Controllers** handle HTTP input/output for each domain.
-- **Services** hold business logic (e.g., `processing.service.js`, `validation.service.js`, `verification.service.js`, `parcel.service.js`, `audit.service.js`, `ai.service.js`).
-- **Middleware** provides JWT authentication, role-based authorization, upload handling and centralized error handling.
+- **Controllers** handle HTTP input/output per domain.
+- **Services** hold business logic (`processing.service.js`, `validation.service.js`, `verification.service.js`, `parcel.service.js`, `audit.service.js`, `ai.service.js`, and others).
+- **Middleware** covers JWT authentication, role-based authorization, upload handling and centralized error handling.
 - **Config / Utils** cover environment and database configuration, JWT helpers, response helpers and validators.
 
 ```text
@@ -314,7 +318,7 @@ Backend/src/
 
 ## 🤖 AI Service
 
-**Directory:** `ai-service/` · **Stack:** Python, FastAPI, OpenCV, PaddleOCR, PyMuPDF, scikit-image, deskew, LangChain, LangChain OpenAI integration, OpenRouter-compatible LLM.
+**Directory:** `ai-service/` · **Stack:** Python, FastAPI, Uvicorn, OpenCV, PaddleOCR, PyMuPDF, scikit-image, deskew, LangChain, LangChain OpenAI integration, OpenRouter-compatible LLM
 
 ```text
 ai-service/
@@ -332,48 +336,47 @@ ai-service/
 └── api_server.py
 ```
 
-The FastAPI application is defined in `ai-service/api_server.py` as `app = FastAPI(...)`.
+The FastAPI app is defined in `ai-service/api_server.py`.
 
 | Endpoint | Method | Purpose |
 |---|---|---|
-| `/ai/process-document` | `POST` | Main endpoint: processes an uploaded land-record document and returns structured JSON |
+| `/ai/process-document` | `POST` | Processes an uploaded land-record document and returns structured JSON |
 | `/health` | `GET` | Health check |
 
-Interactive API documentation is available at `/docs` (FastAPI's built-in Swagger UI).
+Interactive API docs (FastAPI's built-in Swagger UI) are served at `/docs`.
 
 ### Processing pipeline
 
 ```text
-Document Upload
-  → File Validation
+Document upload
+  → File validation
   → Preprocessing
-  → OCR / Text Extraction
-  → Document Understanding
-  → Structured Field Extraction
+  → OCR / text extraction
+  → Document understanding
+  → Structured field extraction
   → Normalization
-  → Validation Support
-  → Structured JSON
-  → Backend
+  → Validation support
+  → Structured JSON → Backend
 ```
 
 | Stage | What it does |
 |---|---|
-| File Validation | Checks the incoming file before processing |
-| Preprocessing | Image cleanup and deskewing using OpenCV, scikit-image and deskew; PDF handling with PyMuPDF |
-| OCR / Text Extraction | PaddleOCR extracts text from the document |
-| Document Understanding | LLM-assisted interpretation of the extracted text (via LangChain and an OpenRouter-compatible model) |
-| Structured Field Extraction | Important land-record fields are extracted into a structured form |
+| File validation | Checks the incoming file before processing |
+| Preprocessing | Image cleanup and deskewing with OpenCV, scikit-image and deskew; PDF handling with PyMuPDF |
+| OCR / text extraction | PaddleOCR extracts text from the document |
+| Document understanding | LLM-assisted interpretation of the extracted text (LangChain with an OpenRouter-compatible model) |
+| Structured field extraction | Land-record fields are pulled into a structured form |
 | Normalization | Extracted values are normalized for downstream use |
-| Validation Support | Comparison utilities support checking data against reference/demo data |
-| Structured JSON | Result is returned to the backend for storage, validation and review |
+| Validation support | Comparison utilities support checking data against reference/demo data |
+| Structured JSON | The result goes back to the Backend for storage, validation and review |
 
-> **Note:** The AI pipeline is part of a working prototype. Extraction quality depends on document quality, language and handwriting, and this README makes no claim of measured accuracy. All AI output is intended for human review.
+> Extraction quality depends on document quality, language and handwriting. No accuracy figures are claimed, and all AI output is intended for human review.
 
 ## 🗄️ Database
 
-**Technology:** PostgreSQL with the **PostGIS** and **pgcrypto** extensions. In the deployed prototype, the database is hosted on **Aiven**.
+**Technology:** PostgreSQL with the **PostGIS** and **pgcrypto** extensions. In the deployed prototype it is hosted on **Aiven**.
 
-The database stores application and land-record information, including:
+The database stores:
 
 - Users
 - Documents
@@ -388,9 +391,7 @@ The database stores application and land-record information, including:
 - Parcels
 - Parcel links
 
-**Why PostGIS?** PostGIS enables storage of geographic parcel geometry, spatial data handling, GIS visualization, and linking of structured land records to parcel locations.
-
-The current project uses **synthetic/demo data** only.
+PostGIS is used for parcel geometry, spatial data handling, and linking land records to parcel locations for map display. All data in the current project is **synthetic/demo data**.
 
 ## 🗺️ GIS & Parcel Linking
 
@@ -402,11 +403,11 @@ Parcel database (geographic geometry)
 Linked land record + map visualization
 ```
 
-The GIS component combines **PostGIS** (parcel geometry) on the backend with **Leaflet / React-Leaflet** on the frontend (map view and parcel details). The parcel data is prototype/synthetic.
+Parcel geometry is stored in **PostGIS** and displayed with **Leaflet / React-Leaflet** on the Frontend (map view and parcel details). The parcel data is prototype/synthetic.
 
 ### Identifier hierarchy
 
-The system attempts parcel matching using identifiers in the following order:
+Parcel matching is attempted in this order:
 
 1. **Exact ULPIN**
 2. **Survey Number + Khasra Number**
@@ -416,26 +417,26 @@ The system attempts parcel matching using identifiers in the following order:
 ```mermaid
 flowchart TD
     A["Land Record"] --> B{"Exact ULPIN match?"}
-    B -- "Yes" --> L1["Link method: ulpin_exact"]
+    B -- "Yes" --> L1["ulpin_exact"]
     B -- "No" --> C{"Survey No. + Khasra No. match?"}
-    C -- "Yes" --> L2["Link method: survey_khasra"]
+    C -- "Yes" --> L2["survey_khasra"]
     C -- "No" --> D{"Khasra No. match?"}
-    D -- "Yes" --> L3["Link method: khasra_location"]
-    D -- "No" --> L4["Link method: manual_review"]
-    L1 --> E["Parcel Match + Link Status"]
+    D -- "Yes" --> L3["khasra_location"]
+    D -- "No" --> L4["manual_review"]
+    L1 --> E["Parcel match + link status"]
     L2 --> E
     L3 --> E
     L4 --> E
     E --> F["GIS Visualization"]
 ```
 
-Current parcel-link methods include `ulpin_exact`, `survey_khasra`, `khasra_location` and `manual_review`.
+Current parcel-link methods: `ulpin_exact`, `survey_khasra`, `khasra_location` and `manual_review`.
 
-> Parcel linking runs against the project's own prototype parcel data. It is **not** connected to live government cadastral databases.
+> Parcel linking runs against the project's own prototype parcel data. It is **not** connected to any live government cadastral database.
 
 ## ✅ Validation & Human Verification
 
-AI extraction never automatically becomes a final authoritative record.
+AI extraction never becomes a final, authoritative record on its own.
 
 ```mermaid
 flowchart LR
@@ -446,35 +447,42 @@ flowchart LR
     E --> F["Audit Trail"]
 ```
 
-- **Validation** compares extracted fields with authorized reference/demo data and surfaces issues and discrepancies.
+- **Validation** compares extracted fields with reference/demo data and surfaces discrepancies.
 - **Human review** lets a person inspect the document, the extracted values and any flagged issues.
 - **Correction / verification** records the reviewer's decision.
 - **Audit trail** records actions for traceability.
 
-IntelliLandAI is designed to **assist** officers and reviewers, not to replace them.
+IntelliLandAI is meant to **assist** officers and reviewers, not replace them.
 
 ### Document types
 
-The system works with document categories such as **ROR**, **Mutation**, **Registration**, **Handwritten** and **Map**. Synthetic/demo records are used for demonstration.
+The demo data covers **ROR**, **Mutation**, **Registration**, **Handwritten** and **Map** documents.
 
 ### Document quality
 
-The project considers document quality levels: **clean**, **medium**, **poor** and **very poor**. This matters because real-world land records are frequently old, faded, skewed, stained, handwritten or photographed under imperfect conditions, and a digitization workflow must cope with the full range rather than only clean scans. Different quality levels also help demonstrate where human verification is most important.
+The project considers four quality levels: **clean**, **medium**, **poor** and **very poor**. Real land records are often old, faded, skewed, stained, handwritten or photographed under imperfect conditions, so a digitization workflow has to cope with the whole range, and the lower quality levels are where human verification matters most.
 
 ### User roles
 
-The application defines four roles: **ADMIN**, **OFFICER**, **VERIFIER** and **VIEWER**. At a high level, they separate administration, land-record processing, verification/review, and read-only access. Role checks are enforced in the backend through role-based middleware.
+| Role | Purpose (high level) |
+|---|---|
+| `ADMIN` | Administration |
+| `OFFICER` | Land-record processing |
+| `VERIFIER` | Verification and review |
+| `VIEWER` | Read-only access |
+
+Role checks are enforced in the Backend through role-based middleware.
 
 ## 🚀 Deployment Architecture
 
 | Component | Platform | URL |
 |---|---|---|
-| Frontend | Vercel | https://intelliland.vercel.app |
+| Frontend | Vercel | https://intelliland-auvb9qa8u-bhumatrix.vercel.app/login |
 | Backend | Render | https://intelliland-backend.onrender.com |
 | Backend health | Render | https://intelliland-backend.onrender.com/health |
 | AI Service | Render | https://intellandai.onrender.com |
 | AI Service docs | Render | https://intellandai.onrender.com/docs |
-| AI health | Render | https://intellandai.onrender.com/health |
+| AI Service health | Render | https://intellandai.onrender.com/health |
 | Database | Aiven | PostgreSQL + PostGIS (private) |
 
 ```mermaid
@@ -485,13 +493,13 @@ flowchart TD
     R2 --> OR["OpenRouter<br/>LLM"]
 ```
 
-The AI service starts in production with:
+The AI Service starts in this deployment with:
 
 ```bash
 uvicorn api_server:app --host 0.0.0.0 --port $PORT
 ```
 
-> Free-tier hosting can cause a slow first response while a service wakes up.
+This is a hosted **prototype** deployment, not a production one. Free-tier hosting can cause a slow first response while a service wakes up.
 
 ## 📁 Repository Structure
 
@@ -502,30 +510,25 @@ intelliLandAI/
 ├── Frontend/          # React + Vite web application
 ├── database/          # Database schema / SQL assets (PostgreSQL + PostGIS)
 ├── gis/               # GIS / parcel data assets
-├── sample-data/       # Synthetic/demo land-record data
+├── sample-data/       # Synthetic/demo land-record documents
 ├── test_outputs/      # Outputs from testing/experiments
-├── .gitignore
-├── README.md
-├── data.json
-├── deskewed_document.jpg
-├── main.py
-├── pyproject.toml
-├── trial.ipynb
-└── uv.lock
+├── pyproject.toml     # Python project metadata
+├── uv.lock            # Locked Python dependencies
+└── README.md
 ```
 
 | Path | Purpose |
 |---|---|
-| `Frontend/` | User interface: dashboard, upload, validation review, GIS map, audit history |
-| `Backend/` | REST API, authentication, workflows, database access, AI service integration |
-| `ai-service/` | Document processing pipeline exposed through FastAPI |
+| `Frontend/` | Dashboard, upload, validation review, GIS map, audit history |
+| `Backend/` | REST API, authentication, workflows, database access, AI Service integration |
+| `ai-service/` | Document-processing pipeline exposed through FastAPI |
 | `database/` | Database setup assets for PostgreSQL + PostGIS |
 | `gis/` | GIS and parcel-related assets |
 | `sample-data/` | Synthetic/demo data used to demonstrate the platform |
 | `test_outputs/` | Experiment and test outputs |
 | `pyproject.toml`, `uv.lock` | Python project metadata and locked dependencies |
 
-The remaining top-level files (`data.json`, `deskewed_document.jpg`, `main.py`, `trial.ipynb`) are development/demo artifacts from prototyping.
+The repository root also contains a few files left over from prototyping (`data.json`, `deskewed_document.jpg`, `main.py`, `trial.ipynb`). They are not part of the application and can be ignored.
 
 ## 🛠️ Local Setup
 
@@ -533,7 +536,7 @@ The remaining top-level files (`data.json`, `deskewed_document.jpg`, `main.py`, 
 
 - [Git](https://git-scm.com/)
 - [Node.js](https://nodejs.org/) and npm
-- [Python](https://www.python.org/) (3.x; see `pyproject.toml` for the required version)
+- [Python](https://www.python.org/) (see `pyproject.toml` for the required version)
 - [PostgreSQL](https://www.postgresql.org/) with the [PostGIS](https://postgis.net/) extension
 - An OpenRouter API key (or another OpenRouter-compatible LLM endpoint) for AI extraction
 
@@ -551,7 +554,7 @@ cd Frontend
 npm install
 ```
 
-The frontend's API base URL is configured in `Frontend/src/services/api.js`. Point it at your local backend (or the deployed backend) as needed.
+The API base URL is set in `Frontend/src/services/api.js`. Point it at your local Backend or the deployed one.
 
 ### B. Backend
 
@@ -560,11 +563,11 @@ cd Backend
 npm install
 ```
 
-Create a `.env` file in `Backend/` using the [environment variables](#-environment-variables) below. Backend configuration is read in `Backend/src/config/env.js`.
+Create a `.env` file in `Backend/` using the [environment variables](#-environment-variables) below. Configuration is read in `Backend/src/config/env.js`.
 
 ### C. AI Service
 
-Create and activate a virtual environment, then install the Python dependencies declared in `pyproject.toml` (for example with `uv`, or with `pip` in a virtual environment):
+Install the Python dependencies declared in `pyproject.toml`:
 
 ```bash
 # Option 1: uv (the repository includes uv.lock)
@@ -573,26 +576,26 @@ uv sync
 # Option 2: pip inside a virtual environment
 python -m venv .venv
 source .venv/bin/activate      # Windows: .venv\Scripts\activate
-pip install .                  # installs dependencies declared in pyproject.toml
+pip install .
 ```
 
-Create a `.env` for the AI service with your OpenRouter settings (see below). PaddleOCR may download model files on first run.
+Create a `.env` for the AI Service with your OpenRouter settings (see below). PaddleOCR may download model files on first run.
 
 ### D. Database
 
 1. Create a PostgreSQL database (for example `intelliland`).
 2. Enable the required extensions:
 
-```sql
-CREATE EXTENSION IF NOT EXISTS postgis;
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-```
+   ```sql
+   CREATE EXTENSION IF NOT EXISTS postgis;
+   CREATE EXTENSION IF NOT EXISTS pgcrypto;
+   ```
 
-3. Apply the schema and demo data from the `database/`, `gis/` and `sample-data/` directories using `psql` or your preferred SQL client. Refer to the files in those directories for the exact scripts.
+3. Apply the schema and demo data from `database/`, `gis/` and `sample-data/` using `psql` or your preferred SQL client. Check the files in those directories for the exact scripts.
 
-## 🔐 Environment Variables
+## 🔑 Environment Variables
 
-Use placeholder values only, and **never commit real secrets**. Actual credentials must be configured locally (for example in untracked `.env` files).
+Use placeholder values only and **never commit real secrets**. Keep actual credentials in untracked `.env` files.
 
 ```env
 # Database
@@ -603,21 +606,21 @@ DB_NAME=intelliland
 DB_USER=postgres
 DB_PASSWORD=your_password
 
-# Backend → AI service
+# Backend → AI Service
 AI_SERVICE_URL=http://localhost:8000
 
-# LLM (AI service)
+# LLM (AI Service)
 OPENROUTER_API_KEY=your_openrouter_api_key
 OPENROUTER_MODEL=your_model
 ```
 
-> The backend also requires a JWT secret and any other settings defined in `Backend/src/config/env.js`. Check that file for the exact variable names used by your version of the code.
+The Backend also needs a JWT secret and any other settings defined in `Backend/src/config/env.js`. Check that file for the exact variable names in your version of the code.
 
 ## ▶️ Running Locally
 
 Start each component in its own terminal.
 
-**Database**: make sure PostgreSQL (with PostGIS) is running and the schema/demo data are loaded.
+**Database:** make sure PostgreSQL (with PostGIS) is running and the schema/demo data are loaded.
 
 **AI Service**
 
@@ -626,9 +629,7 @@ cd ai-service
 uvicorn api_server:app --host 0.0.0.0 --port 8000
 ```
 
-The API docs will be available at `http://localhost:8000/docs`, and the health check at `http://localhost:8000/health`.
-
-> In production, Render runs: `uvicorn api_server:app --host 0.0.0.0 --port $PORT`
+API docs: `http://localhost:8000/docs` · Health check: `http://localhost:8000/health`
 
 **Backend**
 
@@ -637,7 +638,7 @@ cd Backend
 npm run dev
 ```
 
-Check the `scripts` section of `Backend/package.json` for the available start commands (for example `npm start`).
+See the `scripts` section of `Backend/package.json` for other start commands (for example `npm start`).
 
 **Frontend**
 
@@ -650,95 +651,102 @@ Vite prints the local URL (typically `http://localhost:5173`).
 
 ## 🔌 API Overview
 
-A high-level overview by area. Exact paths and request/response schemas are defined in the route files under `Backend/src/routes/` and in the AI service's `/docs`.
+High-level overview by area. Exact paths and schemas are defined in `Backend/src/routes/` and in the AI Service's `/docs`.
 
 | Area | Purpose |
 |---|---|
-| **Authentication** | Login and session/token handling |
-| **Dashboard** | Summary data for the dashboard view |
-| **Documents** | Document upload, listing, details and processing status |
-| **Land Records** | Access to structured land-record data |
-| **Validation** | Validation results and discrepancy review |
-| **Verification** | Human verification and correction workflow |
-| **Parcels** | Parcel data and parcel-link operations for GIS visualization |
-| **Audit** | Audit log and history |
+| Authentication | Login and token handling |
+| Dashboard | Summary data for the dashboard |
+| Documents | Upload, listing, details and processing status |
+| Land Records | Access to structured land-record data |
+| Validation | Validation results and discrepancy review |
+| Verification | Human verification and correction workflow |
+| Parcels | Parcel data and parcel-link operations for GIS visualization |
+| Audit | Audit log and history |
 
 **AI Service**
 
 | Method | Endpoint | Description |
 |---|---|---|
 | `POST` | `/ai/process-document` | Process a document and return structured JSON |
-| `GET` | `/health` | Service health check |
+| `GET` | `/health` | Health check |
 
 **Backend**
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/health` | Service health check |
+| `GET` | `/health` | Health check |
 
 ## 🧪 Sample Data
 
-The prototype uses **synthetic/demo land records and parcel data**. It does **not** come from government databases.
+The prototype uses **synthetic/demo land records and parcel data**. None of it comes from government databases.
 
-The demo dataset is intended to demonstrate:
+```text
+sample-data/
+├── documents/
+│   ├── handwritten/     # HANDWRITTEN_001, HANDWRITTEN_001_POOR_QUALITY, HANDWRITTEN_002
+│   ├── maps/            # (empty; no map documents in the current dataset)
+│   ├── mutation/        # MUTATION_001
+│   ├── registration/    # REGISTRATION_001, REGISTRATION_001_POOR_QUALITY, REGISTRATION_002
+│   └── ror/             # ROR_001, ROR_001_POOR_QUALITY, ROR_002
+├── ground-truth/        # One *_GROUND_TRUTH.json per document, grouped by type
+├── metadata/
+│   └── dataset.json     # Maps each document to its ground truth, plus language, quality and expected validation
+├── ground-truth.zip
+└── README.md
+```
 
-- Different document types (ROR, Mutation, Registration, Handwritten, Map)
-- Different document quality levels (clean, medium, poor, very poor)
+The dataset has **10 documents**: 3 RoR, 1 Mutation, 3 Registration and 3 Handwritten, including 3 poor-quality variants (`_POOR_QUALITY`). It is meant to show:
+
+- Different document types and quality levels (clean, medium, poor, very poor)
+- Hindi, English and mixed Hindi-English documents, including handwritten ones
 - Land-record extraction
-- Validation against reference/demo data
+- Validation against reference/demo data, with both expected-match and expected-mismatch cases
 - Parcel linking
 - GIS visualization
 
+See the [Evaluator / Demo Guide](#-evaluator--demo-guide) for how to use these samples, and [`sample-data/README.md`](./sample-data/README.md) for more on the dataset.
+
 ## 🔒 Security
 
-Security-related concepts in the current prototype:
+What the prototype currently has in place:
 
 - **JWT authentication** for API access
-- **Role-based authorization** (ADMIN, OFFICER, VERIFIER, VIEWER) via backend middleware
+- **Role-based authorization** (`ADMIN`, `OFFICER`, `VERIFIER`, `VIEWER`) through Backend middleware
 - **Environment variables** for secrets (API keys, database credentials, JWT secret), not committed to the repository
-- **Backend API separation**: the frontend never talks to the database directly; database access goes through the backend
-- **Input validation** through backend validators
-- **File upload handling** via Multer with upload middleware
+- **Backend API separation**: the Frontend never talks to the database directly
+- **Input validation** through Backend validators
+- **File upload handling** via Multer and upload middleware
 - **Centralized error handling** middleware
 
-> This is a prototype. A production deployment would require additional hardening, such as a formal security review, stricter upload controls and scanning, secrets management, rate limiting, monitoring, backups and compliance review.
+This is a prototype. A production deployment would need further hardening: a formal security review, stricter upload controls and scanning, proper secrets management, rate limiting, monitoring, backups and compliance review.
 
 ## 🏛️ Government / Domain Context
 
-The project is inspired by real land-record digitization and modernization challenges involving concepts such as:
+The project is inspired by real land-record digitization and modernization challenges, involving concepts such as land records, ROR / Khatauni, khasra and survey numbers, mutation, registration, ULPIN, GIS parcel mapping, and the DILRMP (Digital India Land Records Modernization Programme) context.
 
-- Land records
-- ROR / Khatauni
-- Khasra and survey numbers
-- Mutation
-- Registration
-- ULPIN
-- GIS parcel mapping
-- The DILRMP (Digital India Land Records Modernization Programme) context
-
-**Important clarification:** IntelliLandAI does **not** claim direct integration with DILRMP, ULPIN systems, Bhu Naksha, LRMS, or any other government database. It uses its own synthetic/demo data. Government systems are considered as **future/possible integration context** and would require authorized APIs and access.
+> **Clarification:** IntelliLandAI does **not** integrate with DILRMP, ULPIN systems, Bhu Naksha, LRMS or any other government database. It works only with its own synthetic/demo data. Government systems are treated as possible future integration context and would require authorized APIs and access.
 
 ## ⚠️ Limitations
 
-IntelliLandAI is intentionally scoped as a prototype. Being transparent about its boundaries:
-
-- It is a **prototype/demo system** demonstrating an end-to-end workflow.
-- It uses **synthetic/demo data** for records and parcels.
-- It makes **no claim of official government integration**.
-- It makes **no claim of legal authority**; outputs are not official records.
+- This is a **prototype** that demonstrates an end-to-end workflow.
+- All land records and parcels are **synthetic/demo data**.
+- There is **no official government integration** and **no legal authority**; outputs are not official records.
 - **AI extraction requires human verification.**
-- No accuracy figures are claimed; extraction quality varies with document quality, language and handwriting.
-- **Production-grade deployment** would require additional security, scalability and validation work.
-- **Government data integration** would require authorized APIs and access.
+- No accuracy figures are claimed. Extraction quality varies with document quality, language and handwriting.
+- Live AI processing depends on a third-party inference provider and is subject to its availability and usage limits.
+- Free-tier hosting can make the first request slow.
+- A production deployment would need more security, scalability and validation work.
+- Government data integration would require authorized APIs and access.
 
 ## 🔭 Future Scope
 
-The following are **planned/possible improvements, not current features**:
+These are **possible improvements, not current features**:
 
 - Government-authorized data integration
 - Support for more regional languages
 - Improved handwriting recognition
-- Advanced document layout understanding
+- Better document layout understanding
 - Better confidence scoring
 - More sophisticated validation rules
 - Scalable object storage for documents
@@ -749,10 +757,10 @@ The following are **planned/possible improvements, not current features**:
 
 ## 🤝 Contributing
 
-Contributions, issues and suggestions are welcome.
+Issues and suggestions are welcome.
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
+2. Create a branch: `git checkout -b feature/your-feature`
 3. Commit your changes: `git commit -m "Add your feature"`
 4. Push the branch: `git push origin feature/your-feature`
 5. Open a Pull Request
@@ -761,11 +769,11 @@ Please never commit secrets or real land-record data.
 
 ## 📄 License
 
-A license has not yet been specified for this repository. Add a `LICENSE` file (for example MIT or Apache-2.0) and update this section accordingly.
+No license file is currently included in this repository, so no reuse terms have been specified. <!-- If you add a LICENSE file (e.g. MIT or Apache-2.0), replace this section with the license name and a link to it. -->
 
 ## 🙏 Acknowledgements
 
 - The open-source communities behind React, Vite, Leaflet, Express, FastAPI, PostgreSQL, PostGIS, OpenCV, PaddleOCR, PyMuPDF, scikit-image and LangChain
 - OpenRouter for LLM access
 - Vercel, Render and Aiven for hosting the prototype
-- The land-record modernization initiatives and domain context that inspired this project
+- The land-record modernization initiatives that inspired this project
