@@ -2,8 +2,6 @@ from pathlib import Path
 import json
 import os
 
-from tools.parser import parse_document
-
 
 # Project root:
 # intelliLandAI/
@@ -21,17 +19,27 @@ def load_synthetic_demo_fallback(source_path: Path) -> dict | None:
     its use as ``synthetic_ground_truth_fallback`` rather than AI extraction.
     """
     stem = source_path.stem
+
     if "-" in stem and stem.split("-", 1)[0].isdigit():
         stem = stem.split("-", 1)[1]
+
     allowed = {
         "ROR_001": "ror/ROR_001_GROUND_TRUTH.json",
         "ROR_001_POOR_QUALITY": "ror/ROR_001_POOR_QUALITY_GROUND_TRUTH.json",
         "ROR_002": "ror/ROR_002_GROUND_TRUTH.json",
     }
+
     relative = allowed.get(stem)
+
     if not relative:
         return None
-    with (PROJECT_ROOT / "sample-data" / "ground-truth" / relative).open(encoding="utf-8") as handle:
+
+    with (
+        PROJECT_ROOT
+        / "sample-data"
+        / "ground-truth"
+        / relative
+    ).open(encoding="utf-8") as handle:
         return json.load(handle)
 
 
@@ -47,11 +55,9 @@ def resolve_document_path(file_path: str) -> Path:
 
     source_path = Path(file_path)
 
-    # Absolute path: use directly.
     if source_path.is_absolute():
         return source_path
 
-    # Relative path: resolve from IntelliLandAI project root.
     return (PROJECT_ROOT / source_path).resolve()
 
 
@@ -71,24 +77,37 @@ def process_document(
     schema_type = document_type or "auto"
 
     fallback = None
+
     if not os.getenv("OPENROUTER_API_KEY"):
         fallback = load_synthetic_demo_fallback(source_path)
+
         if fallback is None:
             raise ValueError(
-                "OpenRouter is not configured. Synthetic demo fallback is available only for bundled ROR sample documents."
+                "OpenRouter is not configured. "
+                "Synthetic demo fallback is available only "
+                "for bundled ROR sample documents."
             )
 
     if fallback is not None:
         from schema import parse_land_document, detect_document_category
+
         model = parse_land_document(fallback)
         category = detect_document_category(fallback)
+
         doc_stem = source_path.stem
         extraction_source = "synthetic_ground_truth_fallback"
+
     else:
+        # Lazy import:
+        # prevents heavy AI/OCR dependencies from loading
+        # during FastAPI startup.
+        from tools.parser import parse_document
+
         model, category, doc_stem = parse_document(
             document_source=source_path,
             schema_type=schema_type,
         )
+
         extraction_source = "openrouter_ai"
 
     return {
