@@ -22,9 +22,20 @@ const app = express();
 |--------------------------------------------------------------------------
 */
 
+const allowedOrigins = [
+  "https://intelliland.vercel.app",
+  "https://intelliland-2vgzpi117-bhumatrix.vercel.app",
+];
+
 app.use(
   cors({
-    origin: "https://intelliland.vercel.app",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
