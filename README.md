@@ -20,7 +20,7 @@ IntelliLandAI is an AI-assisted prototype that modernizes land-record workflows.
 
 ### 🎥 Demo Video
 
-[▶️ Watch IntelliLandAI Demo Video on YouTube](YOUR_YOUTUBE_VIDEO_LINK)
+[▶️ Watch IntelliLandAI | AI-Powered Land Record Digitization, Validation & GIS Parcel Linking](https://youtu.be/6ntKG6ohBbA?si=KandPt-S9j1Q472e)
 
 Live AI extraction uses a third-party inference provider and may be
 > subject to provider availability and usage limits. Pre-processed
