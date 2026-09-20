@@ -2,6 +2,8 @@ import os
 from fastapi import FastAPI
 from dotenv import load_dotenv
 
+from api.routes.document import router as document_router
+
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
 app = FastAPI(
@@ -17,3 +19,6 @@ def health_check():
         "success": True,
         "message": "IntelliLandAI AI Service is running",
     }
+
+
+app.include_router(document_router)
