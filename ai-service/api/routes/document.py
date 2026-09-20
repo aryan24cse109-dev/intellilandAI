@@ -1,5 +1,7 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pathlib import Path
+from tempfile import NamedTemporaryFile
+
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from services.document_processor import process_document
 
@@ -10,22 +12,34 @@ router = APIRouter(
 )
 
 
-class DocumentProcessRequest(BaseModel):
-    document_id: str
-    file_path: str
-    document_type: str | None = None
-    language: str | None = None
-
-
 @router.post("/process-document")
-def process_document_endpoint(request: DocumentProcessRequest):
+async def process_document_endpoint(
+    document_id: str = Form(...),
+    document_type: str | None = Form(None),
+    language: str | None = Form(None),
+    file: UploadFile = File(...),
+):
+    temp_path: Path | None = None
 
     try:
+        # Keep the original extension so PDF/image detection continues
+        # to work exactly as it does locally.
+        suffix = Path(file.filename or "").suffix
+
+        with NamedTemporaryFile(
+            delete=False,
+            suffix=suffix,
+        ) as temp_file:
+            temp_path = Path(temp_file.name)
+
+            while chunk := await file.read(1024 * 1024):
+                temp_file.write(chunk)
+
         result = process_document(
-            document_id=request.document_id,
-            file_path=request.file_path,
-            document_type=request.document_type,
-            language=request.language,
+            document_id=document_id,
+            file_path=str(temp_path),
+            document_type=document_type,
+            language=language,
         )
 
         return {
@@ -50,3 +64,12 @@ def process_document_endpoint(request: DocumentProcessRequest):
             status_code=500,
             detail=str(error),
         )
+
+    finally:
+        if temp_path and temp_path.exists():
+            try:
+                temp_path.unlink()
+            except OSError:
+                pass
+
+        await file.close()

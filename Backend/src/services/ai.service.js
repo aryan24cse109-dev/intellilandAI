@@ -1,3 +1,6 @@
+const fs = require("fs");
+const path = require("path");
+
 const env = require("../config/env");
 
 const processDocumentWithAI = async (document) => {
@@ -7,20 +10,67 @@ const processDocumentWithAI = async (document) => {
     controller.abort();
   }, 120000);
 
+  let fileStream = null;
+
   try {
+    if (!document?.file_path) {
+      throw new Error("Document file path is missing");
+    }
+
+    if (!fs.existsSync(document.file_path)) {
+      throw new Error(
+        `Uploaded document file not found: ${document.file_path}`
+      );
+    }
+
+    const formData = new FormData();
+
+    formData.append("document_id", document.id);
+
+    if (document.document_type) {
+      formData.append("document_type", document.document_type);
+    }
+
+    if (document.language) {
+      formData.append("language", document.language);
+    }
+
+    fileStream = fs.createReadStream(document.file_path);
+
+    const originalFileName =
+      document.file_name ||
+      path.basename(document.file_path);
+
+    const fileExtension =
+      path.extname(originalFileName).toLowerCase();
+
+    let contentType = "application/octet-stream";
+
+    if (fileExtension === ".pdf") {
+      contentType = "application/pdf";
+    } else if (
+      fileExtension === ".jpg" ||
+      fileExtension === ".jpeg"
+    ) {
+      contentType = "image/jpeg";
+    } else if (fileExtension === ".png") {
+      contentType = "image/png";
+    }
+
+    formData.append(
+      "file",
+      fileStream,
+      {
+        filename: originalFileName,
+        contentType,
+      }
+    );
+
     const response = await fetch(
       `${env.aiServiceUrl}/ai/process-document`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          document_id: document.id,
-          file_path: document.file_path,
-          document_type: document.document_type,
-          language: document.language || null,
-        }),
+        body: formData,
         signal: controller.signal,
       }
     );
@@ -54,11 +104,17 @@ const processDocumentWithAI = async (document) => {
       error?.name === "TypeError" &&
       error?.message?.toLowerCase().includes("fetch")
     ) {
-      throw new Error("AI processing service is unavailable");
+      throw new Error(
+        "AI processing service is unavailable"
+      );
     }
 
     throw error;
   } finally {
+    if (fileStream) {
+      fileStream.destroy();
+    }
+
     clearTimeout(timeout);
   }
 };
