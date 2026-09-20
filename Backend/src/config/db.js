@@ -7,6 +7,10 @@ const pool = new Pool({
   database: env.database.name,
   user: env.database.user,
   password: env.database.password,
+  ssl:
+    process.env.DB_SSL === "true"
+      ? { rejectUnauthorized: false }
+      : false,
 });
 
 pool.on("connect", () => {
