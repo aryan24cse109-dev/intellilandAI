@@ -148,18 +148,22 @@ def get_llm(
     )
 
     try:
-        timeout = float(os.getenv("OPENROUTER_TIMEOUT", "120"))
+        timeout = float(
+            os.getenv("OPENROUTER_TIMEOUT", "120")
+        )
     except ValueError:
         timeout = 120.0
 
     try:
-        max_retries = int(os.getenv("OPENROUTER_MAX_RETRIES", "2"))
+        max_retries = int(
+            os.getenv("OPENROUTER_MAX_RETRIES", "2")
+        )
     except ValueError:
         max_retries = 2
 
-          return ChatOpenAI(
+    return ChatOpenAI(
         model=selected_model,
-        temperature=0.0,
+        temperature=temperature,
         api_key=api_key,
         base_url="https://openrouter.ai/api/v1",
         timeout=timeout,
@@ -175,6 +179,8 @@ def get_llm(
             "X-Title": "IntelliLandAI",
         },
     )
+
+
 # Global lazy client.
 llm: Optional[ChatOpenAI] = None
 
@@ -313,7 +319,7 @@ NEVER copy a Survey Number into "khasra_number".
 If the Survey Number is not explicitly present or cannot be reliably
 read, return null for "survey_number".
 
-6. LAND AREA
+7. LAND AREA
 
 Return numeric hectare/acre fields as numbers where possible.
 
@@ -325,19 +331,19 @@ Do not write:
 
 Traditional Bigha/Biswa can remain a string.
 
-7. HINDI
+8. HINDI
 
 Preserve Devanagari Hindi when available.
 
-8. BILINGUAL INFORMATION
+9. BILINGUAL INFORMATION
 
 If both English and Hindi are present, populate both fields.
 
-9. DOCUMENT TYPE
+10. DOCUMENT TYPE
 
 Use the appropriate record type based only on the document.
 
-10. REQUIRED FIELDS
+11. REQUIRED FIELDS
 
 For required schema fields:
 - extract them from the document if explicitly present
@@ -370,7 +376,12 @@ def load_document_text(
         (raw_text, document_stem)
     """
 
-    source_path = Path(source) if isinstance(source, (str, Path)) else None
+    source_path = (
+        Path(source)
+        if isinstance(source, (str, Path))
+        else None
+    )
+
     resolved_path: Optional[Path] = None
 
     if source_path:
@@ -395,7 +406,10 @@ def load_document_text(
 
         if suffix == ".pdf":
             try:
-                loader = PyMuPDFLoader(str(resolved_path))
+                loader = PyMuPDFLoader(
+                    str(resolved_path)
+                )
+
                 pages = loader.load()
 
                 raw_text = "\n\n".join(
@@ -415,14 +429,18 @@ def load_document_text(
             try:
                 import fitz
 
-                doc = fitz.open(str(resolved_path))
+                doc = fitz.open(
+                    str(resolved_path)
+                )
 
                 text_list = [
                     page.get_text()
                     for page in doc
                 ]
 
-                raw_text = "\n\n".join(text_list).strip()
+                raw_text = "\n\n".join(
+                    text_list
+                ).strip()
 
                 return raw_text, doc_stem
 
@@ -436,11 +454,15 @@ def load_document_text(
         # TXT / JSON / CSV
         # ---------------------------------------------------------
 
-        if suffix in (".txt", ".json", ".csv"):
+        if suffix in (
+            ".txt",
+            ".json",
+            ".csv",
+        ):
             with open(
                 resolved_path,
                 "r",
-                encoding="utf-8"
+                encoding="utf-8",
             ) as file:
                 content = file.read()
 
@@ -458,7 +480,9 @@ def load_document_text(
 
                         if "raw_text" in data:
                             return (
-                                str(data["raw_text"]).strip(),
+                                str(
+                                    data["raw_text"]
+                                ).strip(),
                                 doc_stem,
                             )
 
@@ -482,7 +506,9 @@ def load_document_text(
             try:
                 from main import process_image
 
-                result = process_image(str(resolved_path))
+                result = process_image(
+                    str(resolved_path)
+                )
 
                 ocr_text = str(
                     result.get("ocr", "")
@@ -504,13 +530,17 @@ def load_document_text(
             with open(
                 resolved_path,
                 "r",
-                encoding="utf-8"
+                encoding="utf-8",
             ) as file:
-                return file.read().strip(), doc_stem
+                return (
+                    file.read().strip(),
+                    doc_stem,
+                )
 
         except Exception as exc:
             raise ValueError(
-                f"Could not read document {resolved_path}: {exc}"
+                f"Could not read document "
+                f"{resolved_path}: {exc}"
             ) from exc
 
     # -----------------------------------------------------------------
@@ -653,7 +683,10 @@ def resolve_schema(
 
     if (
         isinstance(schema_type, type)
-        and issubclass(schema_type, BaseModel)
+        and issubclass(
+            schema_type,
+            BaseModel,
+        )
     ):
         category = DocumentCategory.UNKNOWN
 
@@ -664,7 +697,10 @@ def resolve_schema(
 
         return schema_type, category
 
-    if isinstance(schema_type, DocumentCategory):
+    if isinstance(
+        schema_type,
+        DocumentCategory,
+    ):
         return (
             SCHEMA_REGISTRY.get(
                 schema_type,
@@ -673,13 +709,24 @@ def resolve_schema(
             schema_type,
         )
 
-    if isinstance(schema_type, str):
+    if isinstance(
+        schema_type,
+        str,
+    ):
 
-        cleaned_key = schema_type.strip().lower()
+        cleaned_key = (
+            schema_type
+            .strip()
+            .lower()
+        )
 
         if cleaned_key in SCHEMA_ALIAS_MAP:
 
-            target_cls = SCHEMA_ALIAS_MAP[cleaned_key]
+            target_cls = (
+                SCHEMA_ALIAS_MAP[
+                    cleaned_key
+                ]
+            )
 
             for cat, schema_cls in SCHEMA_REGISTRY.items():
 
@@ -724,7 +771,9 @@ def resolve_schema(
 # JSON EXTRACTION HELPERS
 # =============================================================================
 
-def _content_to_text(content: Any) -> str:
+def _content_to_text(
+    content: Any,
+) -> str:
     """
     Converts different LangChain/OpenAI response content formats
     into plain text.
@@ -772,7 +821,9 @@ def _content_to_text(content: Any) -> str:
     return str(content)
 
 
-def _remove_safety_prefixes(text: str) -> str:
+def _remove_safety_prefixes(
+    text: str,
+) -> str:
     """
     Removes harmless provider/model wrapper text such as:
 
@@ -783,8 +834,6 @@ def _remove_safety_prefixes(text: str) -> str:
 
     cleaned = text.strip()
 
-    # Remove common provider safety line only when it occurs
-    # before the JSON object.
     cleaned = re.sub(
         r"^\s*User\s+Safety\s*:\s*[^\n]*\n?",
         "",
@@ -802,7 +851,9 @@ def _remove_safety_prefixes(text: str) -> str:
     return cleaned.strip()
 
 
-def _strip_markdown_fences(text: str) -> str:
+def _strip_markdown_fences(
+    text: str,
+) -> str:
     """
     Removes markdown JSON fences if the model ignores the
     JSON-only instruction.
@@ -846,7 +897,10 @@ def _extract_balanced_json_object(
     in_string = False
     escaped = False
 
-    for index in range(start, len(text)):
+    for index in range(
+        start,
+        len(text),
+    ):
 
         char = text[index]
 
@@ -877,7 +931,9 @@ def _extract_balanced_json_object(
             depth -= 1
 
             if depth == 0:
-                return text[start:index + 1]
+                return text[
+                    start:index + 1
+                ]
 
     return None
 
@@ -901,7 +957,10 @@ def extract_json_from_llm_response(
     # Direct dictionary
     # ---------------------------------------------------------
 
-    if isinstance(response, dict):
+    if isinstance(
+        response,
+        dict,
+    ):
         return response
 
     # ---------------------------------------------------------
@@ -914,24 +973,35 @@ def extract_json_from_llm_response(
         response,
     )
 
-    text = _content_to_text(content)
+    text = _content_to_text(
+        content
+    )
 
     if not text.strip():
         raise ValueError(
             "OpenRouter returned an empty response."
         )
 
-    text = _remove_safety_prefixes(text)
-    text = _strip_markdown_fences(text)
+    text = _remove_safety_prefixes(
+        text
+    )
+
+    text = _strip_markdown_fences(
+        text
+    )
 
     # ---------------------------------------------------------
     # Direct JSON
     # ---------------------------------------------------------
 
     try:
+
         parsed = json.loads(text)
 
-        if isinstance(parsed, dict):
+        if isinstance(
+            parsed,
+            dict,
+        ):
             return parsed
 
     except json.JSONDecodeError:
@@ -941,20 +1011,33 @@ def extract_json_from_llm_response(
     # Extract balanced JSON object
     # ---------------------------------------------------------
 
-    json_text = _extract_balanced_json_object(text)
+    json_text = (
+        _extract_balanced_json_object(
+            text
+        )
+    )
 
     if json_text:
 
         try:
-            parsed = json.loads(json_text)
 
-            if isinstance(parsed, dict):
+            parsed = json.loads(
+                json_text
+            )
+
+            if isinstance(
+                parsed,
+                dict,
+            ):
                 return parsed
 
         except json.JSONDecodeError:
             pass
 
-    preview = text[:1000].replace("\n", "\\n")
+    preview = (
+        text[:1000]
+        .replace("\n", "\\n")
+    )
 
     raise ValueError(
         "OpenRouter did not return a valid JSON object. "
@@ -984,7 +1067,10 @@ def _first_value(
         if value is None:
             continue
 
-        if isinstance(value, str) and not value.strip():
+        if (
+            isinstance(value, str)
+            and not value.strip()
+        ):
             continue
 
         return value
@@ -1005,7 +1091,10 @@ def _nested_language_value(
     }
     """
 
-    if not isinstance(value, dict):
+    if not isinstance(
+        value,
+        dict,
+    ):
         return None
 
     aliases = {
@@ -1023,7 +1112,10 @@ def _nested_language_value(
         ],
     }
 
-    for key in aliases.get(language, []):
+    for key in aliases.get(
+        language,
+        [],
+    ):
 
         if key in value:
 
@@ -1055,9 +1147,14 @@ def _normalize_location_field(
         district_hindi: "रामपुर"
     """
 
-    nested = data.get(base_name)
+    nested = data.get(
+        base_name
+    )
 
-    if isinstance(nested, dict):
+    if isinstance(
+        nested,
+        dict,
+    ):
 
         english = _nested_language_value(
             nested,
@@ -1075,7 +1172,9 @@ def _normalize_location_field(
                 f"{base_name}_english"
             )
         ):
-            data[f"{base_name}_english"] = english
+            data[
+                f"{base_name}_english"
+            ] = english
 
         if (
             hindi is not None
@@ -1083,22 +1182,32 @@ def _normalize_location_field(
                 f"{base_name}_hindi"
             )
         ):
-            data[f"{base_name}_hindi"] = hindi
+            data[
+                f"{base_name}_hindi"
+            ] = hindi
 
-        # Remove nested version because it is not part
-        # of the Pydantic schema.
-        data.pop(base_name, None)
+        data.pop(
+            base_name,
+            None,
+        )
 
     elif nested is not None:
 
-        # If model returns a plain value for the location,
-        # treat it as English only.
-        english_key = f"{base_name}_english"
+        english_key = (
+            f"{base_name}_english"
+        )
 
-        if not data.get(english_key):
-            data[english_key] = nested
+        if not data.get(
+            english_key
+        ):
+            data[
+                english_key
+            ] = nested
 
-        data.pop(base_name, None)
+        data.pop(
+            base_name,
+            None,
+        )
 
 
 def normalize_extracted_data(
@@ -1115,7 +1224,10 @@ def normalize_extracted_data(
     the model.
     """
 
-    if not isinstance(data, dict):
+    if not isinstance(
+        data,
+        dict,
+    ):
         raise ValueError(
             "Extracted AI result must be a JSON object."
         )
@@ -1187,9 +1299,14 @@ def normalize_extracted_data(
         ],
     }
 
-    for target_key, aliases in location_aliases.items():
+    for (
+        target_key,
+        aliases,
+    ) in location_aliases.items():
 
-        if normalized.get(target_key):
+        if normalized.get(
+            target_key
+        ):
             continue
 
         value = _first_value(
@@ -1198,13 +1315,17 @@ def normalize_extracted_data(
         )
 
         if value is not None:
-            normalized[target_key] = value
+            normalized[
+                target_key
+            ] = value
 
     # ---------------------------------------------------------
     # Khasra
     # ---------------------------------------------------------
 
-    if not normalized.get("khasra_number"):
+    if not normalized.get(
+        "khasra_number"
+    ):
 
         value = _first_value(
             normalized,
@@ -1220,13 +1341,17 @@ def normalize_extracted_data(
         )
 
         if value is not None:
-            normalized["khasra_number"] = value
+            normalized[
+                "khasra_number"
+            ] = value
 
     # ---------------------------------------------------------
     # Khata
     # ---------------------------------------------------------
 
-    if not normalized.get("khata_number"):
+    if not normalized.get(
+        "khata_number"
+    ):
 
         value = _first_value(
             normalized,
@@ -1240,13 +1365,17 @@ def normalize_extracted_data(
         )
 
         if value is not None:
-            normalized["khata_number"] = value
+            normalized[
+                "khata_number"
+            ] = value
 
     # ---------------------------------------------------------
     # Survey
     # ---------------------------------------------------------
 
-    if not normalized.get("survey_number"):
+    if not normalized.get(
+        "survey_number"
+    ):
 
         value = _first_value(
             normalized,
@@ -1260,13 +1389,17 @@ def normalize_extracted_data(
         )
 
         if value is not None:
-            normalized["survey_number"] = value
+            normalized[
+                "survey_number"
+            ] = value
 
     # ---------------------------------------------------------
     # Document type
     # ---------------------------------------------------------
 
-    if not normalized.get("document_type"):
+    if not normalized.get(
+        "document_type"
+    ):
 
         value = _first_value(
             normalized,
@@ -1279,13 +1412,17 @@ def normalize_extracted_data(
         )
 
         if value is not None:
-            normalized["document_type"] = value
+            normalized[
+                "document_type"
+            ] = value
 
     # ---------------------------------------------------------
     # ROR record number
     # ---------------------------------------------------------
 
-    if not normalized.get("record_entry_number"):
+    if not normalized.get(
+        "record_entry_number"
+    ):
 
         value = _first_value(
             normalized,
@@ -1299,13 +1436,17 @@ def normalize_extracted_data(
         )
 
         if value is not None:
-            normalized["record_entry_number"] = value
+            normalized[
+                "record_entry_number"
+            ] = value
 
     # ---------------------------------------------------------
     # Owner aliases
     # ---------------------------------------------------------
 
-    if not normalized.get("owner_name_english"):
+    if not normalized.get(
+        "owner_name_english"
+    ):
 
         value = _first_value(
             normalized,
@@ -1317,16 +1458,23 @@ def normalize_extracted_data(
             ],
         )
 
-        if isinstance(value, dict):
+        if isinstance(
+            value,
+            dict,
+        ):
             value = _nested_language_value(
                 value,
                 "english",
             )
 
         if value is not None:
-            normalized["owner_name_english"] = value
+            normalized[
+                "owner_name_english"
+            ] = value
 
-    if not normalized.get("owner_name_hindi"):
+    if not normalized.get(
+        "owner_name_hindi"
+    ):
 
         value = _first_value(
             normalized,
@@ -1337,14 +1485,19 @@ def normalize_extracted_data(
             ],
         )
 
-        if isinstance(value, dict):
+        if isinstance(
+            value,
+            dict,
+        ):
             value = _nested_language_value(
                 value,
                 "hindi",
             )
 
         if value is not None:
-            normalized["owner_name_hindi"] = value
+            normalized[
+                "owner_name_hindi"
+            ] = value
 
     # ---------------------------------------------------------
     # Father / husband aliases
@@ -1364,7 +1517,10 @@ def normalize_extracted_data(
             ],
         )
 
-        if isinstance(value, dict):
+        if isinstance(
+            value,
+            dict,
+        ):
             value = _nested_language_value(
                 value,
                 "english",
@@ -1388,7 +1544,10 @@ def normalize_extracted_data(
             ],
         )
 
-        if isinstance(value, dict):
+        if isinstance(
+            value,
+            dict,
+        ):
             value = _nested_language_value(
                 value,
                 "hindi",
@@ -1402,71 +1561,109 @@ def normalize_extracted_data(
     # ---------------------------------------------------------
     # Nested parcel / khasra records
     # ---------------------------------------------------------
-    # Some OpenRouter models naturally return cadastral data as:
-    #
-    #   "parcels": [{
-    #       "khasra_number": "589/2",
-    #       "area_hectares": 1.25,
-    #       ...
-    #   }]
-    #
-    # The application schema is intentionally flat for the primary
-    # land-record row. Unwrap the FIRST parcel only when the flat field
-    # is missing. Never invent or merge values that are not present.
-    parcels = normalized.get("parcels")
-    if isinstance(parcels, list) and parcels:
+
+    parcels = normalized.get(
+        "parcels"
+    )
+
+    if (
+        isinstance(parcels, list)
+        and parcels
+    ):
         first_parcel = parcels[0]
 
-        if isinstance(first_parcel, dict):
+        if isinstance(
+            first_parcel,
+            dict,
+        ):
+
             parcel_aliases = {
                 "khasra_number": [
-                    "khasra_number", "khasra", "khasra_no",
-                    "khasraNo", "plot_number", "plot_no",
+                    "khasra_number",
+                    "khasra",
+                    "khasra_no",
+                    "khasraNo",
+                    "plot_number",
+                    "plot_no",
                     "parcel_number",
                 ],
                 "survey_number": [
-                    "survey_number", "survey", "survey_no",
-                    "surveyNo", "survey_id",
+                    "survey_number",
+                    "survey",
+                    "survey_no",
+                    "surveyNo",
+                    "survey_id",
                 ],
                 "land_area_hectares": [
-                    "land_area_hectares", "area_hectares",
-                    "hectares", "area_ha",
+                    "land_area_hectares",
+                    "area_hectares",
+                    "hectares",
+                    "area_ha",
                 ],
                 "land_area_acres": [
-                    "land_area_acres", "area_acres",
-                    "acres", "area_in_acres",
+                    "land_area_acres",
+                    "area_acres",
+                    "acres",
+                    "area_in_acres",
                 ],
                 "land_classification_english": [
                     "land_classification_english",
                     "classification_english",
-                    "land_classification", "classification",
+                    "land_classification",
+                    "classification",
                 ],
                 "land_classification_hindi": [
                     "land_classification_hindi",
                     "classification_hindi",
                 ],
                 "ownership_share": [
-                    "ownership_share", "share", "share_ratio",
+                    "ownership_share",
+                    "share",
+                    "share_ratio",
                     "ownership_ratio",
                 ],
             }
 
-            for target_key, aliases in parcel_aliases.items():
-                if normalized.get(target_key) not in (None, ""):
+            for (
+                target_key,
+                aliases,
+            ) in parcel_aliases.items():
+
+                if normalized.get(
+                    target_key
+                ) not in (
+                    None,
+                    "",
+                ):
                     continue
 
-                value = _first_value(first_parcel, aliases)
+                value = _first_value(
+                    first_parcel,
+                    aliases,
+                )
 
-                if isinstance(value, dict):
+                if isinstance(
+                    value,
+                    dict,
+                ):
+
                     language = (
                         "hindi"
-                        if target_key.endswith("_hindi")
+                        if target_key.endswith(
+                            "_hindi"
+                        )
                         else "english"
                     )
-                    value = _nested_language_value(value, language)
+
+                    value = _nested_language_value(
+                        value,
+                        language,
+                    )
 
                 if value is not None:
-                    normalized[target_key] = value
+                    normalized[
+                        target_key
+                    ] = value
 
     # ---------------------------------------------------------
     # Area aliases
@@ -1487,9 +1684,14 @@ def normalize_extracted_data(
         ],
     }
 
-    for target_key, aliases in area_aliases.items():
+    for (
+        target_key,
+        aliases,
+    ) in area_aliases.items():
 
-        if normalized.get(target_key) is not None:
+        if normalized.get(
+            target_key
+        ) is not None:
             continue
 
         value = _first_value(
@@ -1498,8 +1700,10 @@ def normalize_extracted_data(
         )
 
         if value is not None:
-            normalized[target_key] = (
-                parse_numeric_area(value)
+            normalized[
+                target_key
+            ] = parse_numeric_area(
+                value
             )
 
     # ---------------------------------------------------------
@@ -1520,7 +1724,10 @@ def normalize_extracted_data(
             ],
         )
 
-        if isinstance(value, dict):
+        if isinstance(
+            value,
+            dict,
+        ):
             value = _nested_language_value(
                 value,
                 "english",
@@ -1543,7 +1750,10 @@ def normalize_extracted_data(
             ],
         )
 
-        if isinstance(value, dict):
+        if isinstance(
+            value,
+            dict,
+        ):
             value = _nested_language_value(
                 value,
                 "hindi",
@@ -1558,7 +1768,9 @@ def normalize_extracted_data(
     # Ownership share aliases
     # ---------------------------------------------------------
 
-    if not normalized.get("ownership_share"):
+    if not normalized.get(
+        "ownership_share"
+    ):
 
         value = _first_value(
             normalized,
@@ -1571,7 +1783,9 @@ def normalize_extracted_data(
         )
 
         if value is not None:
-            normalized["ownership_share"] = value
+            normalized[
+                "ownership_share"
+            ] = value
 
     # ---------------------------------------------------------
     # Annual revenue aliases
@@ -1611,8 +1825,6 @@ def sanitize_extracted_data(
     Sanitizes extracted values while preserving source-grounded data.
     """
 
-    import re
-
     date_fields = [
         "mutation_date",
         "registration_date",
@@ -1628,9 +1840,10 @@ def sanitize_extracted_data(
         if not data[field]:
             continue
 
-        value = str(data[field]).strip()
+        value = str(
+            data[field]
+        ).strip()
 
-        # Detect malformed ISO years.
         iso_match = re.match(
             r"^(\d{4})-(\d{2})-(\d{2})$",
             value,
@@ -1678,7 +1891,9 @@ def sanitize_extracted_data(
                             break
 
                     if matched_date:
-                        data[field] = matched_date
+                        data[field] = (
+                            matched_date
+                        )
                     else:
                         data[field] = (
                             f"{text_dates[0][0]}-"
@@ -1686,9 +1901,13 @@ def sanitize_extracted_data(
                             f"{text_dates[0][2]}"
                         )
 
-        # Strip accidental whitespace.
-        if isinstance(data[field], str):
-            data[field] = data[field].strip()
+        if isinstance(
+            data[field],
+            str,
+        ):
+            data[field] = (
+                data[field].strip()
+            )
 
     return data
 
@@ -1705,9 +1924,12 @@ def validate_against_schema(
     Normalizes and validates AI output against the target Pydantic schema.
     """
 
-    normalized = normalize_extracted_data(data)
+    normalized = normalize_extracted_data(
+        data
+    )
 
     try:
+
         model = target_schema.model_validate(
             normalized
         )
@@ -1716,7 +1938,6 @@ def validate_against_schema(
 
     except Exception as exc:
 
-        # Print normalized payload for debugging.
         print(
             "\n[AI DEBUG] Normalized extraction:\n"
             + json.dumps(
@@ -1793,7 +2014,10 @@ def parse_document(
     # ---------------------------------------------------------
 
     try:
-        schema_json = target_schema.model_json_schema()
+
+        schema_json = (
+            target_schema.model_json_schema()
+        )
 
         schema_text = json.dumps(
             schema_json,
@@ -1806,10 +2030,6 @@ def parse_document(
 
     # ---------------------------------------------------------
     # 5. Build plain prompt
-    #
-    # IMPORTANT:
-    # We intentionally DO NOT use ChatPromptTemplate here.
-    # This avoids LangChain interpreting JSON braces as variables.
     # ---------------------------------------------------------
 
     prompt = f"""
@@ -1871,7 +2091,9 @@ Return JSON only.
 
     try:
 
-        response = llm.invoke(prompt)
+        response = llm.invoke(
+            prompt
+        )
 
     except Exception as exc:
 
@@ -1903,26 +2125,32 @@ Return JSON only.
     # 8. Normalize aliases / nested fields
     # ---------------------------------------------------------
 
-    extracted_dict = normalize_extracted_data(
-        extracted_dict
+    extracted_dict = (
+        normalize_extracted_data(
+            extracted_dict
+        )
     )
 
     # ---------------------------------------------------------
     # 9. Sanitize
     # ---------------------------------------------------------
 
-    extracted_dict = sanitize_extracted_data(
-        extracted_dict,
-        raw_text,
+    extracted_dict = (
+        sanitize_extracted_data(
+            extracted_dict,
+            raw_text,
+        )
     )
 
     # ---------------------------------------------------------
     # 10. Validate with Pydantic
     # ---------------------------------------------------------
 
-    extracted_model = validate_against_schema(
-        extracted_dict,
-        target_schema,
+    extracted_model = (
+        validate_against_schema(
+            extracted_dict,
+            target_schema,
+        )
     )
 
     return (
@@ -1960,8 +2188,9 @@ def parse_and_save(
         llm=llm,
     )
 
-    # Resolve output directory
-    out_path = Path(output_dir)
+    out_path = Path(
+        output_dir
+    )
 
     if not out_path.is_absolute():
 
@@ -1995,7 +2224,9 @@ def parse_and_save(
         or f"{doc_stem}_op.json"
     )
 
-    target_file = out_path / filename
+    target_file = (
+        out_path / filename
+    )
 
     data_dict = model.model_dump(
         mode="json"
@@ -2012,7 +2243,9 @@ def parse_and_save(
         "w",
         encoding="utf-8",
     ) as file:
-        file.write(json_content)
+        file.write(
+            json_content
+        )
 
     print(
         f"[{category.value}] "
@@ -2020,7 +2253,10 @@ def parse_and_save(
         f"{target_file}"
     )
 
-    return model, target_file
+    return (
+        model,
+        target_file,
+    )
 
 
 # =============================================================================
@@ -2046,10 +2282,14 @@ def batch_parse(
     Parses all PDF/TXT documents in a directory.
     """
 
-    in_path = Path(input_dir)
+    in_path = Path(
+        input_dir
+    )
 
     if not in_path.is_absolute():
-        in_path = PROJECT_ROOT / in_path
+        in_path = (
+            PROJECT_ROOT / in_path
+        )
 
     if not in_path.is_dir():
         raise FileNotFoundError(
@@ -2057,8 +2297,12 @@ def batch_parse(
         )
 
     files = sorted(
-        list(in_path.glob("**/*.pdf"))
-        + list(in_path.glob("**/*.txt"))
+        list(
+            in_path.glob("**/*.pdf")
+        )
+        + list(
+            in_path.glob("**/*.txt")
+        )
     )
 
     results: List[
@@ -2079,15 +2323,20 @@ def batch_parse(
 
         try:
 
-            model, output_file = parse_and_save(
-                document_source=file_path,
-                output_dir=output_dir,
-                schema_type=schema_type,
-                llm=llm,
+            model, output_file = (
+                parse_and_save(
+                    document_source=file_path,
+                    output_dir=output_dir,
+                    schema_type=schema_type,
+                    llm=llm,
+                )
             )
 
             results.append(
-                (model, output_file)
+                (
+                    model,
+                    output_file,
+                )
             )
 
         except Exception as exc:
@@ -2192,11 +2441,13 @@ if __name__ == "__main__":
 
         else:
 
-            model, saved_path = parse_and_save(
-                document_source=args.file,
-                output_dir=args.output_dir,
-                schema_type=args.schema,
-                llm=llm,
+            model, saved_path = (
+                parse_and_save(
+                    document_source=args.file,
+                    output_dir=args.output_dir,
+                    schema_type=args.schema,
+                    llm=llm,
+                )
             )
 
             print(
