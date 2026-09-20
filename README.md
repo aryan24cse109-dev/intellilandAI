@@ -22,9 +22,14 @@ IntelliLandAI is an AI-assisted prototype that modernizes land-record workflows.
 
 [▶️ Watch IntelliLandAI Demo Video on YouTube](YOUR_YOUTUBE_VIDEO_LINK)
 
+Live AI extraction uses a third-party inference provider and may be
+> subject to provider availability and usage limits. Pre-processed
+> samples are provided so the complete prototype workflow can be
+> evaluated without repeated external AI requests.
+
 ### 🌐 Live Demo
 
-[🚀 Open IntelliLandAI Live Demo](https://intelliland-qxosqwgas-bhumatrix.vercel.app/login)
+[🚀 Open IntelliLandAI Live Demo](https://intelliland-auvb9qa8u-bhumatrix.vercel.app/login)
 
 ---
 ## 🔐 Demo Login Credentials
