@@ -27,7 +27,17 @@ IntelliLandAI is an AI-assisted prototype that modernizes land-record workflows.
 [🚀 Open IntelliLandAI Live Demo](https://intelliland-qxosqwgas-bhumatrix.vercel.app/login)
 
 ---
+## 🔐 Demo Login Credentials
 
+For demonstration purposes, the following prototype account can be used:
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@intelliland.local` | `Admin@123` |
+
+> **Note:** These credentials are provided only for the prototype/demo environment. Do not use demo credentials in a production deployment.
+>
+> 
 ## 📑 Table of Contents
 
 - [Problem](#-problem)
