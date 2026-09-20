@@ -41,8 +41,60 @@ For demonstration purposes, the following prototype account can be used:
 | Admin | `admin@intelliland.local` | `Admin@123` |
 
 > **Note:** These credentials are provided only for the prototype/demo environment. Do not use demo credentials in a production deployment.
->
-> 
+
+
+## 🧪 Evaluator / Demo Guide
+
+To evaluate the complete IntelliLandAI workflow, please use the
+pre-processed sample documents provided in the `sample-data/` directory.
+
+### Recommended Evaluation Flow
+
+1. Open the [Live IntelliLandAI Demo](https://intelliland-auvb9qa8u-bhumatrix.vercel.app/login)
+2. Login using the demo credentials provided below.
+3. Navigate to **Documents**.
+4. Use the documents available in:
+   `sample-data/`
+5. Prefer the **pre-processed sample documents** marked/referenced as
+   successfully processed.
+6. Open a processed document and explore:
+   - Extracted land-record information
+   - Validation results
+   - Human verification/review
+   - Audit history
+   - Parcel linking
+   - GIS visualization
+
+> **Important:** The provided sample documents are already processed and
+> are intended for reliable demonstration of the complete end-to-end
+> workflow. Evaluators do not need to repeatedly trigger live AI
+> processing for these samples.
+
+### Live AI Processing
+
+IntelliLandAI also supports live document processing through the AI service.
+Live processing depends on the availability and usage limits of the
+configured third-party inference provider.
+
+For evaluation of the complete workflow, the provided pre-processed
+samples are recommended.
+
+### 📄 Recommended Sample Documents
+
+The following pre-processed documents are recommended for evaluation:
+
+| Document | Type | What to Explore |
+|---|---|---|
+| `01_ROR_processed.pdf` | RoR / Khatauni | Extracted land record + validation |
+| `02_ROR_processed.pdf` | RoR / Khatauni | Landowner and parcel information |
+| `03_Mutation_processed.pdf` | Mutation | Mutation-related validation |
+| `04_Registration_processed.pdf` | Registration | Registration data extraction |
+| `05_Handwritten_processed.pdf` | Handwritten | Handwritten/local-language processing |
+
+These samples are already available in the `sample-data/` directory and
+are intended for evaluator demonstration.
+
+
 ## 📑 Table of Contents
 
 - [Problem](#-problem)
