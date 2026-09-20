@@ -157,26 +157,24 @@ def get_llm(
     except ValueError:
         max_retries = 2
 
-   return ChatOpenAI(
-    model=selected_model,
-    temperature=0.0,
-    api_key=api_key,
-    base_url="https://openrouter.ai/api/v1",
-    timeout=timeout,
-    max_retries=max_retries,
-    max_tokens=8192,
-    model_kwargs={
-        "response_format": {
-            "type": "json_object"
-        }
-    },
-    default_headers={
-        "HTTP-Referer": "https://intelliland.vercel.app",
-        "X-Title": "IntelliLandAI",
-    },
-)
-
-
+      return ChatOpenAI(
+        model=selected_model,
+        temperature=0.0,
+        api_key=api_key,
+        base_url="https://openrouter.ai/api/v1",
+        timeout=timeout,
+        max_retries=max_retries,
+        max_tokens=8192,
+        model_kwargs={
+            "response_format": {
+                "type": "json_object"
+            }
+        },
+        default_headers={
+            "HTTP-Referer": "https://intelliland.vercel.app",
+            "X-Title": "IntelliLandAI",
+        },
+    )
 # Global lazy client.
 llm: Optional[ChatOpenAI] = None
 
